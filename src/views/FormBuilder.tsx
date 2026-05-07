@@ -22,6 +22,7 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
   ]);
   const [activeField, setActiveField] = useState<string | null>('1');
   const [isSaved, setIsSaved] = useState(false);
+  const [isToolboxOpen, setIsToolboxOpen] = useState(false);
 
   const toolBoxItems = [
     { label: 'Dasar', items: [
@@ -136,7 +137,7 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-120px)] -m-6 animate-in fade-in duration-500 overflow-hidden relative">
+    <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-120px)] -m-6 animate-in fade-in duration-500 overflow-hidden relative">
       <AnimatePresence>
         {isSaved && (
           <motion.div 
@@ -151,9 +152,25 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
         )}
       </AnimatePresence>
 
+      {/* Mobile Drawer Backdrop */}
+      <AnimatePresence>
+        {isToolboxOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsToolboxOpen(false)}
+            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Toolbox */}
-      <aside className="w-72 bg-white border-r border-outline-variant flex flex-col shrink-0">
-        <div className="p-6 border-b border-outline-variant flex items-center justify-between">
+      <aside className={cn(
+        "fixed md:relative inset-y-0 left-0 w-72 bg-white border-r border-outline-variant flex flex-col shrink-0 z-50 transition-transform duration-300 md:translate-x-0",
+        isToolboxOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="p-4 md:p-6 border-b border-outline-variant flex items-center justify-between sticky top-0 bg-white z-10">
           <div className="flex items-center gap-4">
             <button 
               onClick={onBack}
@@ -162,24 +179,33 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
               <LayoutDashboard size={20} />
             </button>
             <div>
-              <h2 className="text-xl font-bold text-on-surface leading-tight">Tipe Field</h2>
-              <p className="text-sm text-on-surface-variant mt-1">Klik untuk menambah ke kanvas</p>
+              <h2 className="text-lg md:text-xl font-bold text-on-surface leading-tight">Tipe Field</h2>
+              <p className="hidden md:block text-sm text-on-surface-variant mt-1">Klik untuk menambah</p>
             </div>
           </div>
+          <button 
+            onClick={() => setIsToolboxOpen(false)}
+            className="p-2 md:hidden text-on-surface-variant hover:bg-surface-container rounded-lg"
+          >
+            <Layout size={20} className="rotate-90" />
+          </button>
         </div>
-        <div className="p-6 space-y-8 overflow-y-auto">
+        <div className="p-4 md:p-6 space-y-6 md:space-y-8 overflow-y-auto">
           {toolBoxItems.map(group => (
             <div key={group.label}>
-              <h3 className="text-xs font-bold text-outline uppercase tracking-widest mb-4">{group.label}</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <h3 className="text-[10px] md:text-xs font-bold text-outline uppercase tracking-widest mb-3 md:mb-4">{group.label}</h3>
+              <div className="grid grid-cols-2 gap-2 md:gap-3">
                 {group.items.map(item => (
                   <button 
                     key={item.id}
-                    onClick={() => handleAddField(item)}
-                    className="flex flex-col items-center justify-center p-4 border border-outline-variant rounded-xl bg-surface hover:border-primary hover:text-primary hover:shadow-md transition-all group group-active:scale-95 duration-150 cursor-pointer"
+                    onClick={() => {
+                      handleAddField(item);
+                      if (window.innerWidth < 768) setIsToolboxOpen(false);
+                    }}
+                    className="flex flex-col items-center justify-center p-3 md:p-4 border border-outline-variant rounded-xl bg-surface hover:border-primary hover:text-primary hover:shadow-md transition-all group group-active:scale-95 duration-150 cursor-pointer"
                   >
-                    <item.icon size={20} className="text-on-surface-variant group-hover:text-primary mb-2 transition-colors" />
-                    <span className="text-[11px] font-bold text-center leading-tight">{item.label}</span>
+                    <item.icon size={18} className="text-on-surface-variant group-hover:text-primary mb-1 md:mb-2 transition-colors" />
+                    <span className="text-[9px] md:text-[11px] font-bold text-center leading-tight">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -189,23 +215,30 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
       </aside>
 
       {/* Canvas */}
-      <section className="flex-1 bg-surface-container-low p-12 overflow-y-auto flex flex-col items-center relative">
-        <div className="w-full max-w-2xl space-y-0">
-          <div className="bg-white rounded-t-2xl border border-outline-variant border-b-0 p-8 shadow-sm">
+      <section className="flex-1 bg-surface-container-low p-4 md:p-12 overflow-y-auto flex flex-col items-center relative">
+        <button 
+          onClick={() => setIsToolboxOpen(true)}
+          className="md:hidden sticky top-0 self-start mb-4 bg-primary text-white px-4 py-2 rounded-full shadow-lg font-bold text-xs flex items-center gap-2 z-20 hover:scale-105 active:scale-95 transition-all"
+        >
+          <Layout size={16} />
+          Tambah Field
+        </button>
+        <div className="w-full max-w-2xl space-y-0 pb-24">
+          <div className="bg-white rounded-t-2xl border border-outline-variant border-b-0 p-6 md:p-8 shadow-sm">
             <input 
-              className="w-full text-3xl font-bold text-on-surface border-none focus:ring-0 p-0 mb-2 bg-transparent placeholder-on-surface/30" 
+              className="w-full text-2xl md:text-3xl font-bold text-on-surface border-none focus:ring-0 p-0 mb-2 bg-transparent placeholder-on-surface/30" 
               placeholder="Judul Formulir" 
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
             />
             <input 
-              className="w-full text-base text-on-surface-variant border-none focus:ring-0 p-0 bg-transparent placeholder-on-surface-variant/30" 
+              className="w-full text-sm md:text-base text-on-surface-variant border-none focus:ring-0 p-0 bg-transparent placeholder-on-surface-variant/30" 
               placeholder="Deskripsi Formulir" 
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
             />
           </div>
-          <div className="bg-white border border-outline-variant rounded-b-2xl shadow-md min-h-[500px] p-6 space-y-6 pb-24">
+          <div className="bg-white border border-outline-variant rounded-b-2xl shadow-md min-h-[400px] md:min-h-[500px] p-4 md:p-6 space-y-6">
             <AnimatePresence>
               {formElements.map((element) => (
                 <motion.div 
@@ -216,7 +249,7 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
                   key={element.id}
                   onClick={() => setActiveField(element.id)}
                   className={cn(
-                    "relative group rounded-xl p-6 transition-all cursor-pointer",
+                    "relative group rounded-xl p-4 md:p-6 transition-all cursor-pointer",
                     activeField === element.id 
                       ? "border-2 border-primary bg-primary/5 ring-4 ring-primary/5" 
                       : "border border-transparent hover:border-outline-variant hover:bg-surface"
@@ -327,7 +360,7 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
 
         <button 
           onClick={handleSave}
-          className="fixed bottom-8 bg-primary text-white px-8 py-4 rounded-full shadow-xl hover:bg-primary-container hover:scale-105 active:scale-95 transition-all font-bold flex items-center gap-2 group z-20"
+          className="fixed bottom-8 bg-primary text-white px-8 py-4 rounded-full shadow-xl hover:bg-primary-container hover:scale-105 active:scale-95 transition-all font-bold flex items-center gap-2 group z-30"
         >
           <Save size={20} className="group-hover:rotate-12 transition-transform" />
           Simpan Formulir

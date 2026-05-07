@@ -35,7 +35,7 @@ export default function Sidebar({ currentView, onViewChange, onLogout, isOpen, o
         "fixed inset-y-0 left-0 z-50 w-72 bg-surface-container-lowest border-r border-outline-variant flex flex-col transition-transform duration-300 md:relative md:translate-x-0 md:z-auto",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-6 border-b border-outline-variant flex items-center justify-between">
+        <div className="h-20 px-6 border-b border-outline-variant flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
               O

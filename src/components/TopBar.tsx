@@ -30,7 +30,7 @@ export default function TopBar({ currentView, onViewChange, onMenuClick }: TopBa
   }, []);
 
   return (
-    <header className="flex justify-between items-center h-16 px-6 bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-30 shadow-sm">
+    <header className="flex justify-between items-center h-20 px-6 bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-30 shadow-sm">
       <div className="flex items-center gap-4">
         <button 
           onClick={onMenuClick}
@@ -38,12 +38,6 @@ export default function TopBar({ currentView, onViewChange, onMenuClick }: TopBa
         >
           <Menu size={24} />
         </button>
-        <div className="hidden md:flex items-center gap-2 group cursor-default">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-md group-hover:rotate-6 transition-transform">
-            <LayoutDashboard size={18} />
-          </div>
-          <h2 className="font-bold text-on-surface tracking-tight">Orderly</h2>
-        </div>
       </div>
 
       <div className="flex items-center gap-4">
