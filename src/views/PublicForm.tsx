@@ -118,13 +118,13 @@ export default function PublicForm() {
 
           <div className="mt-12 pt-8 border-t border-outline-variant text-center space-y-2">
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Powered by</p>
-            <h2 className="text-2xl font-black text-primary italic tracking-tight">Orderly</h2>
+            <h2 className="text-2xl font-black text-primary italic tracking-tight">Formly</h2>
           </div>
         </div>
       </div>
       
       <p className="mt-8 text-xs text-on-surface-variant font-medium opacity-60">
-        Protected by SecureOrder™ Encryption. © 2023 Orderly Systems.
+        Protected by SecureOrder™ Encryption. © 2023 Formly Systems.
       </p>
     </div>
   );

@@ -40,7 +40,7 @@ export default function Sidebar({ currentView, onViewChange, onLogout, isOpen, o
               O
             </div>
             <div>
-              <h2 className="font-semibold text-on-surface text-lg leading-tight">Orderly</h2>
+              <h2 className="font-semibold text-on-surface text-lg leading-tight">Formly</h2>
               <p className="text-xs text-on-surface-variant leading-none mt-1">Enterprise Admin</p>
             </div>
           </div>

@@ -27,7 +27,7 @@ export default function Profile() {
         </div>
         <div className="pt-20 pb-8 px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Orderly Admin</h1>
+            <h1 className="text-2xl font-bold text-on-surface">Formly Admin</h1>
             <p className="text-on-surface-variant flex items-center gap-2 mt-1">
               <Building size={16} />
               Administrator Sistem
@@ -52,7 +52,7 @@ export default function Profile() {
                 <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Email</label>
                 <div className="flex items-center gap-3 text-on-surface">
                   <Mail size={18} className="text-primary" />
-                  <span className="font-medium">admin@orderly.app</span>
+                  <span className="font-medium">admin@formly.app</span>
                 </div>
               </div>
               <div className="space-y-1">

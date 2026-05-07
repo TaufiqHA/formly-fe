@@ -8,7 +8,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin }: LoginProps) {
-  const [email, setEmail] = useState('admin@orderly.app');
+  const [email, setEmail] = useState('admin@formly.app');
   const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +20,7 @@ export default function Login({ onLogin }: LoginProps) {
 
     // Simulate login delay
     setTimeout(() => {
-      if (email === 'admin@orderly.app' && password === 'password123') {
+      if (email === 'admin@formly.app' && password === 'password123') {
         onLogin();
       } else {
         setError('Email atau kata sandi salah. Silakan coba lagi.');
@@ -45,7 +45,7 @@ export default function Login({ onLogin }: LoginProps) {
             <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg mb-4">
               <LayoutDashboard size={32} />
             </div>
-            <h1 className="text-3xl font-bold text-on-surface tracking-tight">Orderly</h1>
+            <h1 className="text-3xl font-bold text-on-surface tracking-tight">Formly</h1>
             <p className="text-on-surface-variant mt-2">Kelola pesanan Anda dengan lebih efisien.</p>
           </div>
 
@@ -123,7 +123,7 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
         
         <p className="text-center text-[10px] text-on-surface-variant/50 uppercase tracking-widest mt-8 font-medium">
-          © 2024 Orderly Business Suite • v1.0.4
+          © 2024 Formly Business Suite • v1.0.4
         </p>
       </motion.div>
     </div>

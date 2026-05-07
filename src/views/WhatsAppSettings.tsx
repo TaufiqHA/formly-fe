@@ -111,7 +111,7 @@ export default function WhatsAppSettings() {
               <textarea 
                 rows={4}
                 className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-on-surface resize-none"
-                defaultValue="Halo {nama}, terima kasih telah melakukan pemesanan di Orderly! Kami telah menerima pesanan Anda dengan nomor #ORD-{id}. Mohon tunggu konfirmasi selanjutnya."
+                defaultValue="Halo {nama}, terima kasih telah melakukan pemesanan di Formly! Kami telah menerima pesanan Anda dengan nomor #ORD-{id}. Mohon tunggu konfirmasi selanjutnya."
               />
               <div className="mt-4 flex gap-2 flex-wrap">
                 {['{nama}', '{id}', '{total}', '{tanggal}'].map(tag => (

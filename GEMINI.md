@@ -1,6 +1,6 @@
-# Project Overview: Orderly FE
+# Project Overview: Formly FE
 
-Orderly is a React-based frontend application designed for building forms and managing submissions, likely integrated with AI capabilities via Google's Gemini API. The project is built with a modern stack focusing on developer experience and high-performance UI.
+Formly is a React-based frontend application designed for building forms and managing submissions, likely integrated with AI capabilities via Google's Gemini API. The project is built with a modern stack focusing on developer experience and high-performance UI.
 
 ## Main Technologies
 - **Frontend Framework:** [React 19](https://react.dev/)

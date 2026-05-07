@@ -1,7 +1,7 @@
 <div align="center">
-  <img width="1200" alt="Orderly Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <img width="1200" alt="Formly Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 
-  <h1>🚀 Orderly - Digital Order Form & Dashboard</h1>
+  <h1>🚀 Formly - Digital Order Form & Dashboard</h1>
 
   <p><strong>A modern, high-performance system for building digital order forms, managing submissions, and automating notifications.</strong></p>
 
@@ -18,7 +18,7 @@
 
 ## 📖 Overview
 
-**Orderly** is a comprehensive solution designed to simplify the order collection process. It features a React-based frontend application for building dynamic forms and an intuitive admin dashboard for managing incoming submissions. Integrated with **Google's Gemini API**, WhatsApp, and Google Sheets, Orderly brings automation and intelligence to your workflow.
+**Formly** is a comprehensive solution designed to simplify the order collection process. It features a React-based frontend application for building dynamic forms and an intuitive admin dashboard for managing incoming submissions. Integrated with **Google's Gemini API**, WhatsApp, and Google Sheets, Formly brings automation and intelligence to your workflow.
 
 ## ✨ Key Features
 
@@ -57,8 +57,8 @@ Follow these steps to run the frontend application locally.
 
 1. **Clone the repository** (if you haven't already):
    ```bash
-   git clone https://github.com/TaufiqHA/orderly-fe.git
-   cd orderly-fe
+   git clone https://github.com/TaufiqHA/formly-fe.git
+   cd formly-fe
    ```
 
 2. **Install dependencies:**

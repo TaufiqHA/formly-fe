@@ -1,4 +1,4 @@
-# Dokumentasi Referensi API - Orderly
+# Dokumentasi Referensi API - Formly
 
 **Base URL:** `https://api.orderform.app/v1`
 **Format:** JSON
@@ -23,7 +23,7 @@ Login admin/operator untuk mendapatkan token.
 **Request Body:**
 ```json
 {
-  "email": "admin@orderly.app",
+  "email": "admin@formly.app",
   "password": "password123"
 }
 ```
@@ -36,8 +36,8 @@ Login admin/operator untuk mendapatkan token.
     "token": "1|abcdef1234567890...",
     "user": {
       "id": "e8e12345-e89b-12d3-a456-426614174000",
-      "name": "Orderly Admin",
-      "email": "admin@orderly.app",
+      "name": "Formly Admin",
+      "email": "admin@formly.app",
       "role": "admin"
     }
   },
@@ -65,8 +65,8 @@ Ambil data profil user yang sedang login.
   "success": true,
   "data": {
     "id": "e8e12345...",
-    "name": "Orderly Admin",
-    "email": "admin@orderly.app",
+    "name": "Formly Admin",
+    "email": "admin@formly.app",
     "phone": "+62 812-3456-7890",
     "location": "Jakarta Selatan, Indonesia",
     "avatar_url": "https://...",
