@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar, { ViewType } from './components/Sidebar';
 import TopBar from './components/TopBar';
 import { cn } from './lib/utils';
@@ -12,11 +12,53 @@ import Settings from './views/Settings';
 import Profile from './views/Profile';
 import WhatsAppSettings from './views/WhatsAppSettings';
 import Login from './views/Login';
+import { authService } from './services/authService';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<ViewType>('overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Cek apakah ada token di localStorage saat mount
+    const checkAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        try {
+          // Opsional: Validasi token ke backend
+          await authService.getMe();
+          setIsAuthenticated(true);
+        } catch (error) {
+          // Token tidak valid/expired
+          localStorage.removeItem('auth_token');
+          setIsAuthenticated(false);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
+
+    // Event listener jika token expired (dipanggil dari lib/api.ts)
+    const handleExpired = () => setIsAuthenticated(false);
+    window.addEventListener('auth-expired', handleExpired);
+    
+    return () => window.removeEventListener('auth-expired', handleExpired);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_data');
+      setIsAuthenticated(false);
+      setCurrentView('overview');
+    }
+  };
 
   const renderView = () => {
     switch (currentView) {
@@ -49,6 +91,8 @@ export default function App() {
     }
   };
 
+  if (isLoading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+
   // Special layout for Public Form
   if (currentView === 'publicForm') {
     return <PublicForm />;
@@ -66,10 +110,7 @@ export default function App() {
           setCurrentView(view);
           setIsMobileMenuOpen(false);
         }} 
-        onLogout={() => {
-          setIsAuthenticated(false);
-          setCurrentView('overview');
-        }}
+        onLogout={handleLogout}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Mail, Lock, ChevronRight, LayoutDashboard, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { authService } from '../services/authService';
 
 interface LoginProps {
   onLogin: () => void;
@@ -13,20 +14,26 @@ export default function Login({ onLogin }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // Simulate login delay
-    setTimeout(() => {
-      if (email === 'admin@formly.app' && password === 'password123') {
+    try {
+      const response = await authService.login(email, password);
+      if (response.success) {
+        // 1. Simpan token ke localStorage
+        localStorage.setItem('auth_token', response.data.token);
+        // 2. Simpan data user opsional
+        localStorage.setItem('user_data', JSON.stringify(response.data.user));
+        // 3. Trigger props onLogin
         onLogin();
-      } else {
-        setError('Email atau kata sandi salah. Silakan coba lagi.');
-        setIsLoading(false);
       }
-    }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Email atau kata sandi salah. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
