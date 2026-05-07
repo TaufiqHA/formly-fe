@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, Calendar, TrendingUp, DollarSign, MoreVertical, ArrowRight } from 'lucide-react';
+import { ClipboardList, Layers, TrendingUp, HelpCircle, MoreVertical, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -36,14 +36,14 @@ export default function Dashboard() {
     >
       <div>
         <h1 className="text-2xl sm:text-4xl font-bold text-on-surface">Ringkasan Dashboard</h1>
-        <p className="text-sm sm:text-base text-on-surface-variant mt-1">Pantau performa pesanan dan pendapatan hari ini.</p>
+        <p className="text-sm sm:text-base text-on-surface-variant mt-1">Pantau performa formulir dan respon yang masuk hari ini.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Total Pesanan', value: '1,248', change: '+12% dari bulan lalu', icon: ShoppingCart, color: 'text-primary', bg: 'bg-secondary-container' },
-          { label: 'Pesanan Hari Ini', value: '42', change: '+5% dari kemarin', icon: Calendar, color: 'text-tertiary', bg: 'bg-surface-container-highest' },
-          { label: 'Pendapatan (Bulan Ini)', value: 'Rp 45.2M', change: '+8% dari bulan lalu', icon: DollarSign, color: 'text-primary', bg: 'bg-secondary-container' },
+          { label: 'Total Respon', value: '1,248', change: '+12% dari bulan lalu', icon: ClipboardList, color: 'text-primary', bg: 'bg-secondary-container' },
+          { label: 'Formulir Aktif', value: '12', change: '2 draf tersimpan', icon: Layers, color: 'text-tertiary', bg: 'bg-surface-container-highest' },
+          { label: 'Rata-rata Konversi', value: '8.4%', change: '+0.5% dari bulan lalu', icon: TrendingUp, color: 'text-primary', bg: 'bg-secondary-container' },
         ].map((stat, idx) => (
           <motion.div 
             key={idx}
@@ -70,7 +70,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-6">
         <motion.div variants={itemVariants} className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-xl font-bold text-on-surface">Tren Pesanan</h2>
+            <h2 className="text-xl font-bold text-on-surface">Tren Respon</h2>
             <select className="bg-surface-container border border-outline-variant rounded-md py-1.5 px-3 text-sm text-on-surface-variant focus:ring-primary focus:border-primary outline-none">
               <option>7 Hari Terakhir</option>
               <option>30 Hari Terakhir</option>
@@ -109,7 +109,7 @@ export default function Dashboard() {
 
       <motion.div variants={itemVariants} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
         <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
-          <h2 className="text-xl font-bold text-on-surface">Pesanan Terbaru</h2>
+          <h2 className="text-xl font-bold text-on-surface">Respon Terbaru</h2>
           <button className="text-primary font-semibold text-sm hover:underline flex items-center gap-1">
             Lihat Semua
             <ArrowRight size={16} />
@@ -119,29 +119,29 @@ export default function Dashboard() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-low border-b border-outline-variant">
-                <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">ID Pesanan</th>
-                <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Pelanggan</th>
+                <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">ID Respon</th>
+                <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Pengirim</th>
                 <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Tanggal</th>
-                <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Total</th>
+                <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Nama Form</th>
                 <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
                 <th className="p-4 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="text-sm font-medium text-on-surface">
               {[
-                { id: '#ORD-001', name: 'Budi Santoso', date: '24 Okt 2023, 10:30', total: 'Rp 450.000', status: 'Baru', statusColor: 'bg-secondary-container text-on-secondary-container' },
-                { id: '#ORD-002', name: 'Siti Aminah', date: '24 Okt 2023, 09:15', total: 'Rp 1.200.000', status: 'Diproses', statusColor: 'bg-process-bg text-process-text' },
-                { id: '#ORD-003', name: 'Andi Wijaya', date: '23 Okt 2023, 16:45', total: 'Rp 350.000', status: 'Selesai', statusColor: 'bg-success-bg text-success-text' },
-                { id: '#ORD-004', name: 'Dewi Lestari', date: '23 Okt 2023, 14:20', total: 'Rp 850.000', status: 'Baru', statusColor: 'bg-secondary-container text-on-secondary-container' },
-              ].map((order, idx) => (
+                { id: '#SUB-001', name: 'Budi Santoso', date: '24 Okt 2023, 10:30', form: 'Order Catering', status: 'Baru', statusColor: 'bg-secondary-container text-on-secondary-container' },
+                { id: '#SUB-002', name: 'Siti Aminah', date: '24 Okt 2023, 09:15', form: 'Workshop Registration', status: 'Dibaca', statusColor: 'bg-process-bg text-process-text' },
+                { id: '#SUB-003', name: 'Andi Wijaya', date: '23 Okt 2023, 16:45', form: 'Merchandise Order', status: 'Selesai', statusColor: 'bg-success-bg text-success-text' },
+                { id: '#SUB-004', name: 'Dewi Lestari', date: '23 Okt 2023, 14:20', form: 'Feedback Form', status: 'Baru', statusColor: 'bg-secondary-container text-on-secondary-container' },
+              ].map((submission, idx) => (
                 <tr key={idx} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
-                  <td className="p-4 text-primary font-bold">{order.id}</td>
-                  <td className="p-4">{order.name}</td>
-                  <td className="p-4 text-on-surface-variant">{order.date}</td>
-                  <td className="p-4">{order.total}</td>
+                  <td className="p-4 text-primary font-bold">{submission.id}</td>
+                  <td className="p-4">{submission.name}</td>
+                  <td className="p-4 text-on-surface-variant">{submission.date}</td>
+                  <td className="p-4">{submission.form}</td>
                   <td className="p-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${order.statusColor}`}>
-                      {order.status}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${submission.statusColor}`}>
+                      {submission.status}
                     </span>
                   </td>
                   <td className="p-4 text-right">

@@ -3,11 +3,10 @@ import Sidebar, { ViewType } from './components/Sidebar';
 import TopBar from './components/TopBar';
 import { cn } from './lib/utils';
 import Dashboard from './views/Dashboard';
-import OrderQueue from './views/OrderQueue';
-import OrderDetails from './views/OrderDetails';
+import Submissions from './views/Submissions';
+import SubmissionDetails from './views/SubmissionDetails';
 import FormBuilder from './views/FormBuilder';
 import FormList from './views/FormList';
-import CustomerBase from './views/CustomerBase';
 import PublicForm from './views/PublicForm';
 import Settings from './views/Settings';
 import Profile from './views/Profile';
@@ -24,9 +23,9 @@ export default function App() {
       case 'overview':
         return <Dashboard />;
       case 'orders':
-        return <OrderQueue onSelectOrder={() => setCurrentView('orderDetails')} />;
+        return <Submissions onSelectSubmission={() => setCurrentView('orderDetails')} />;
       case 'orderDetails':
-        return <OrderDetails onBack={() => setCurrentView('orders')} />;
+        return <SubmissionDetails onBack={() => setCurrentView('orders')} />;
       case 'formList':
         return (
           <FormList 
@@ -37,8 +36,6 @@ export default function App() {
         );
       case 'builder':
         return <FormBuilder onBack={() => setCurrentView('formList')} />;
-      case 'customers':
-        return <CustomerBase />;
       case 'settings':
         return <Settings />;
       case 'profile':

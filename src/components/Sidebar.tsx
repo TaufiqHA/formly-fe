@@ -2,7 +2,7 @@ import React from 'react';
 import { LayoutDashboard, ClipboardList, Layers, Package, Users, HelpCircle, LogOut, MessageSquare, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-export type ViewType = 'overview' | 'orders' | 'orderDetails' | 'formList' | 'builder' | 'customers' | 'publicForm' | 'settings' | 'profile' | 'whatsapp';
+export type ViewType = 'overview' | 'orders' | 'orderDetails' | 'formList' | 'builder' | 'publicForm' | 'settings' | 'profile' | 'whatsapp';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -14,11 +14,10 @@ interface SidebarProps {
 
 export default function Sidebar({ currentView, onViewChange, onLogout, isOpen, onClose }: SidebarProps) {
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'orders', label: 'Order Queue', icon: ClipboardList },
-    { id: 'formList', label: 'Form Builder', icon: Layers },
+    { id: 'overview', label: 'Ringkasan', icon: LayoutDashboard },
+    { id: 'orders', label: 'Data Masuk', icon: ClipboardList },
+    { id: 'formList', label: 'Manajemen Form', icon: Layers },
     { id: 'whatsapp', label: 'WhatsApp API', icon: MessageSquare },
-    { id: 'customers', label: 'Customer Base', icon: Users },
   ];
 
   return (
