@@ -137,7 +137,7 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-120px)] -m-6 animate-in fade-in duration-500 overflow-hidden relative">
+    <div className="flex flex-col h-full animate-in fade-in duration-500 overflow-hidden relative bg-surface-container-low">
       <AnimatePresence>
         {isSaved && (
           <motion.div 
@@ -152,7 +152,7 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
         )}
       </AnimatePresence>
 
-      {/* Mobile Drawer Backdrop */}
+      {/* Mobile & Desktop Drawer Backdrop */}
       <AnimatePresence>
         {isToolboxOpen && (
           <motion.div 
@@ -160,52 +160,56 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsToolboxOpen(false)}
-            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm z-40"
           />
         )}
       </AnimatePresence>
 
-      {/* Toolbox */}
+      {/* Toolbox - Floating Panel */}
       <aside className={cn(
-        "fixed md:relative inset-y-0 left-0 w-72 bg-white border-r border-outline-variant flex flex-col shrink-0 z-50 transition-transform duration-300 md:translate-x-0",
-        isToolboxOpen ? "translate-x-0" : "-translate-x-full"
+        "absolute top-6 bottom-6 left-6 w-80 bg-white border border-outline-variant rounded-2xl flex flex-col shrink-0 z-50 transition-all duration-500 shadow-2xl overflow-hidden",
+        isToolboxOpen 
+          ? "translate-x-0 opacity-100 scale-100 rotate-0" 
+          : "-translate-x-full opacity-0 scale-95 -rotate-2 pointer-events-none"
       )}>
-        <div className="p-4 md:p-6 border-b border-outline-variant flex items-center justify-between sticky top-0 bg-white z-10">
+        <div className="p-5 md:p-6 border-b border-outline-variant flex items-center justify-between sticky top-0 bg-white z-10">
           <div className="flex items-center gap-4">
-            <button 
-              onClick={onBack}
-              className="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors"
-            >
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
               <LayoutDashboard size={20} />
-            </button>
+            </div>
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-on-surface leading-tight">Tipe Field</h2>
-              <p className="hidden md:block text-sm text-on-surface-variant mt-1">Klik untuk menambah</p>
+              <h2 className="text-lg md:text-xl font-bold text-on-surface leading-tight">Komponen</h2>
+              <p className="hidden md:block text-[10px] text-on-surface-variant mt-0.5 font-medium uppercase tracking-wider">Seret atau Klik</p>
             </div>
           </div>
           <button 
             onClick={() => setIsToolboxOpen(false)}
-            className="p-2 md:hidden text-on-surface-variant hover:bg-surface-container rounded-lg"
+            className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors group"
           >
-            <Layout size={20} className="rotate-90" />
+            <Layout size={20} className="rotate-90 group-hover:scale-110 transition-transform" />
           </button>
         </div>
-        <div className="p-4 md:p-6 space-y-6 md:space-y-8 overflow-y-auto">
+        <div className="p-4 md:p-6 space-y-8 overflow-y-auto custom-scrollbar">
           {toolBoxItems.map(group => (
             <div key={group.label}>
-              <h3 className="text-[10px] md:text-xs font-bold text-outline uppercase tracking-widest mb-3 md:mb-4">{group.label}</h3>
-              <div className="grid grid-cols-2 gap-2 md:gap-3">
+              <h3 className="text-[10px] font-bold text-outline uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-primary" />
+                {group.label}
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
                 {group.items.map(item => (
                   <button 
                     key={item.id}
                     onClick={() => {
                       handleAddField(item);
-                      if (window.innerWidth < 768) setIsToolboxOpen(false);
+                      if (window.innerWidth < 1024) setIsToolboxOpen(false);
                     }}
-                    className="flex flex-col items-center justify-center p-3 md:p-4 border border-outline-variant rounded-xl bg-surface hover:border-primary hover:text-primary hover:shadow-md transition-all group group-active:scale-95 duration-150 cursor-pointer"
+                    className="flex flex-col items-center justify-center p-4 border border-outline-variant rounded-2xl bg-surface hover:border-primary hover:text-primary hover:shadow-lg hover:-translate-y-0.5 transition-all group group-active:scale-95 duration-200 cursor-pointer"
                   >
-                    <item.icon size={18} className="text-on-surface-variant group-hover:text-primary mb-1 md:mb-2 transition-colors" />
-                    <span className="text-[9px] md:text-[11px] font-bold text-center leading-tight">{item.label}</span>
+                    <div className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center mb-2 group-hover:bg-primary/5 transition-colors">
+                      <item.icon size={20} className="text-on-surface-variant group-hover:text-primary transition-colors" />
+                    </div>
+                    <span className="text-[11px] font-bold text-center leading-tight">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -215,15 +219,47 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
       </aside>
 
       {/* Canvas */}
-      <section className="flex-1 bg-surface-container-low p-4 md:p-12 overflow-y-auto flex flex-col items-center relative">
-        <button 
-          onClick={() => setIsToolboxOpen(true)}
-          className="md:hidden sticky top-0 self-start mb-4 bg-primary text-white px-4 py-2 rounded-full shadow-lg font-bold text-xs flex items-center gap-2 z-20 hover:scale-105 active:scale-95 transition-all"
-        >
-          <Layout size={16} />
-          Tambah Field
-        </button>
-        <div className="w-full max-w-2xl space-y-0 pb-24">
+      <section className="flex-1 p-6 md:p-12 overflow-y-auto flex flex-col items-center relative custom-scrollbar">
+        <div className="w-full max-w-4xl flex items-center justify-between mb-12 sticky top-0 bg-surface-container-low/95 backdrop-blur-xl z-20 py-4">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsToolboxOpen(true)}
+              className={cn(
+                "px-5 py-3 rounded-2xl shadow-lg ring-1 ring-black/5 font-bold text-sm flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95",
+                isToolboxOpen 
+                  ? "bg-white text-primary border border-primary/20" 
+                  : "bg-primary text-white shadow-primary/20"
+              )}
+            >
+              <Layout size={20} />
+              <span>{isToolboxOpen ? 'Tutup Panel' : 'Tambah Field'}</span>
+            </button>
+            <div className="h-8 w-px bg-outline-variant mx-2" />
+            <button 
+              onClick={onBack}
+              className="p-3 bg-white border border-outline-variant rounded-2xl text-on-surface-variant hover:bg-surface-container transition-all shadow-sm hover:scale-105 active:scale-95"
+              title="Kembali ke Dashboard"
+            >
+              <LayoutDashboard size={20} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex flex-col items-end mr-2">
+              <span className="text-[10px] font-bold text-outline uppercase tracking-widest leading-none">Draft Otomatis</span>
+              <span className="text-[11px] text-on-surface-variant font-medium">Tersimpan 1 Menit Lalu</span>
+            </div>
+            <button 
+              onClick={handleSave}
+              className="bg-primary text-white px-8 py-3 rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary-container hover:scale-105 active:scale-95 transition-all font-bold flex items-center gap-2 group text-sm"
+            >
+              <Save size={20} className="group-hover:translate-y-[-1px] transition-transform" />
+              Simpan Form
+            </button>
+          </div>
+        </div>
+
+        <div className="w-full max-w-3xl space-y-0 pb-32">
           <div className="bg-white rounded-t-2xl border border-outline-variant border-b-0 p-6 md:p-8 shadow-sm">
             <input 
               className="w-full text-2xl md:text-3xl font-bold text-on-surface border-none focus:ring-0 p-0 mb-2 bg-transparent placeholder-on-surface/30" 
@@ -357,14 +393,6 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
             </div>
           </div>
         </div>
-
-        <button 
-          onClick={handleSave}
-          className="fixed bottom-8 bg-primary text-white px-8 py-4 rounded-full shadow-xl hover:bg-primary-container hover:scale-105 active:scale-95 transition-all font-bold flex items-center gap-2 group z-30"
-        >
-          <Save size={20} className="group-hover:rotate-12 transition-transform" />
-          Simpan Formulir
-        </button>
       </section>
     </div>
   );

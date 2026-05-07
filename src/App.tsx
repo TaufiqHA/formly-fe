@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar, { ViewType } from './components/Sidebar';
 import TopBar from './components/TopBar';
+import { cn } from './lib/utils';
 import Dashboard from './views/Dashboard';
 import OrderQueue from './views/OrderQueue';
 import OrderDetails from './views/OrderDetails';
@@ -61,7 +62,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex bg-surface-bright min-h-screen relative">
+    <div className="flex bg-surface-bright h-screen overflow-hidden">
       <Sidebar 
         currentView={currentView} 
         onViewChange={(view) => {
@@ -81,8 +82,14 @@ export default function App() {
           onViewChange={setCurrentView} 
           onMenuClick={() => setIsMobileMenuOpen(true)}
         />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <div className="max-w-7xl mx-auto">
+        <main className={cn(
+          "flex-1",
+          currentView === 'builder' ? "p-0 overflow-hidden" : "p-6 overflow-y-auto"
+        )}>
+          <div className={cn(
+            "h-full",
+            currentView !== 'builder' && "max-w-7xl mx-auto"
+          )}>
             {renderView()}
           </div>
         </main>
