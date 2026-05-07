@@ -1,8 +1,67 @@
-import React from 'react';
-import { Camera, Mail, Phone, MapPin, Building, Calendar, Edit3 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Camera, Mail, Phone, MapPin, Building, Calendar, Edit3, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { authService } from '../services/authService';
 
 export default function Profile() {
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await authService.getMe();
+        if (response.success) {
+          setUser(response.data);
+        } else {
+          setError('Gagal memuat profil');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Terjadi kesalahan jaringan');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // Format tanggal menjadi bahasa Indonesia (contoh: 1 Januari 2023)
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full pb-12">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full pb-12 gap-4">
+        <p className="text-error font-medium">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold"
+        >
+          Coba Lagi
+        </button>
+      </div>
+    );
+  }
+
+  // Fallback image jika user tidak punya avatar
+  const avatarUrl = user?.avatar_url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user?.name || 'Admin') + "&background=random";
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -15,7 +74,7 @@ export default function Profile() {
           <div className="absolute -bottom-16 left-8 p-1.5 bg-surface rounded-full">
             <div className="relative group">
               <img 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAusETVBoa3v1yNS7G3II5xdsLACSYMw3VKgQayx2V1ZyXaxeBtDl6fvhZ7nkjvbgpwW9Sb2m1urp-SF_BNNov-s1QPoIhiN3M_z9VSFoBuZyTm6GYp4ioDe1RTc5f7sQjQn1VjVFO3lOLpKvEeyPFovk-wuN6lGCKi5UI98D3XenoA5hLL7dILS7PCDppItpL9IlXkpIPPXA065CyjFdKCNH2pE5_ylcGqLKY-OFkiel_1pbkyFE3vk6wtdgxmRpO1tytFA0u3onSd" 
+                src={avatarUrl} 
                 alt="Profile" 
                 className="w-32 h-32 rounded-full object-cover border-4 border-surface shadow-md"
               />
@@ -27,10 +86,10 @@ export default function Profile() {
         </div>
         <div className="pt-20 pb-8 px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-bold text-on-surface">Formly Admin</h1>
-            <p className="text-on-surface-variant flex items-center gap-2 mt-1">
+            <h1 className="text-2xl font-bold text-on-surface">{user?.name || '-'}</h1>
+            <p className="text-on-surface-variant flex items-center gap-2 mt-1 capitalize">
               <Building size={16} />
-              Administrator Sistem
+              {user?.role === 'admin' ? 'Administrator Sistem' : (user?.role || 'Pengguna')}
               <span className="w-1.5 h-1.5 bg-success-text rounded-full shrink-0" />
               Aktif
             </p>
@@ -52,21 +111,21 @@ export default function Profile() {
                 <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Email</label>
                 <div className="flex items-center gap-3 text-on-surface">
                   <Mail size={18} className="text-primary" />
-                  <span className="font-medium">admin@formly.app</span>
+                  <span className="font-medium">{user?.email || '-'}</span>
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Telepon</label>
                 <div className="flex items-center gap-3 text-on-surface">
                   <Phone size={18} className="text-primary" />
-                  <span className="font-medium">+62 812-3456-7890</span>
+                  <span className="font-medium">{user?.phone || '-'}</span>
                 </div>
               </div>
               <div className="space-y-1 sm:col-span-2">
                 <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Lokasi Kantor</label>
                 <div className="flex items-center gap-3 text-on-surface">
                   <MapPin size={18} className="text-primary" />
-                  <span className="font-medium">Jakarta Selatan, Indonesia</span>
+                  <span className="font-medium">{user?.location || '-'}</span>
                 </div>
               </div>
             </div>
@@ -80,7 +139,7 @@ export default function Profile() {
               <Calendar size={32} />
             </div>
             <p className="text-xs text-on-surface-variant uppercase font-bold tracking-widest">Bergabung Sejak</p>
-            <p className="text-lg font-bold text-on-surface mt-1">1 Januari 2023</p>
+            <p className="text-lg font-bold text-on-surface mt-1">{formatDate(user?.created_at)}</p>
           </div>
         </div>
       </div>
