@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Type, AlignLeft, ChevronDown, CheckSquare, Radio, Mail, Phone, MapPin, Edit, Copy, Trash2, Save, Layout, CheckCircle2, LayoutDashboard } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Type, AlignLeft, ChevronDown, CheckSquare, Radio, Mail, Phone, MapPin, Edit, Copy, Trash2, Save, Layout, CheckCircle2, LayoutDashboard, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { formService } from '../services/formService';
 
 interface FormElement {
   id: string;
@@ -13,16 +14,71 @@ interface FormElement {
   options?: string[];
 }
 
-export default function FormBuilder({ onBack }: { onBack: () => void }) {
-  const [formTitle, setFormTitle] = useState('Formulir Pemesanan Barang');
-  const [formDescription, setFormDescription] = useState('Silakan isi detail pesanan Anda di bawah ini.');
-  const [formElements, setFormElements] = useState<FormElement[]>([
-    { id: '1', type: 'text', label: 'Nama Lengkap', placeholder: 'Masukkan nama lengkap Anda', required: true, icon: Type },
-    { id: '2', type: 'phone', label: 'Nomor WhatsApp', placeholder: 'Contoh: 08123456789', required: true, icon: Phone },
-  ]);
-  const [activeField, setActiveField] = useState<string | null>('1');
+interface FormBuilderProps {
+  formId?: string;
+  onBack: () => void;
+}
+
+const getIconByType = (type: string) => {
+  const icons: Record<string, any> = {
+    text: Type,
+    para: AlignLeft,
+    drop: ChevronDown,
+    check: CheckSquare,
+    radio: Radio,
+    email: Mail,
+    phone: Phone,
+    address: MapPin,
+  };
+  return icons[type] || Type;
+};
+
+export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
+  const [formTitle, setFormTitle] = useState('Memuat...');
+  const [formDescription, setFormDescription] = useState('');
+  const [formElements, setFormElements] = useState<FormElement[]>([]);
+  const [activeField, setActiveField] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isToolboxOpen, setIsToolboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!formId) {
+      setIsLoading(false);
+      return;
+    }
+
+    const loadFormData = async () => {
+      try {
+        const res = await formService.getForm(formId);
+        if (res.success) {
+          setFormTitle(res.data.title);
+          setFormDescription(res.data.description || '');
+          
+          // Map fields dari backend ke format state lokal
+          const mappedFields = res.data.fields.map((f: any) => ({
+            id: f.id,
+            type: f.field_type,
+            label: f.label,
+            placeholder: f.placeholder || '',
+            required: !!f.is_required,
+            icon: getIconByType(f.field_type),
+            options: f.options || undefined
+          }));
+          
+          setFormElements(mappedFields);
+          if (mappedFields.length > 0) setActiveField(mappedFields[0].id);
+        }
+      } catch (e) {
+        console.error("Gagal memuat form", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFormData();
+  }, [formId]);
 
   const toolBoxItems = [
     { label: 'Dasar', items: [
@@ -131,10 +187,51 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
     }
   };
 
-  const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
+  const handleSave = async () => {
+    if (!formId) return alert('Form ID tidak ditemukan');
+    
+    setIsSaving(true);
+    
+    try {
+      // 1. Format state lokal (FormElement) ke struktur Request API
+      const formattedFields = formElements.map((el, index) => {
+        // Cek apakah ID asalnya dari Date.now() (berarti field baru).
+        // Jika ya, we do not send the id to backend so it's treated as a new field.
+        const isNewField = !el.id.includes('-'); 
+        
+        return {
+          ...(isNewField ? {} : { id: el.id }), 
+          label: el.label,
+          field_type: el.type,
+          placeholder: el.placeholder,
+          is_required: el.required,
+          options: el.options || null,
+          sort_order: index 
+        };
+      });
+
+      // 2. Tembak API backend
+      const response = await formService.updateFormFields(formId, formattedFields);
+      
+      if (response.success) {
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+      }
+    } catch (error: any) {
+      alert('Gagal menyimpan form: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-surface-container-low gap-4 animate-in fade-in duration-500">
+        <Loader2 className="animate-spin text-primary" size={40} />
+        <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">Menyiapkan Builder...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full animate-in fade-in duration-500 overflow-hidden relative bg-surface-container-low">
@@ -251,10 +348,20 @@ export default function FormBuilder({ onBack }: { onBack: () => void }) {
             </div>
             <button 
               onClick={handleSave}
-              className="bg-primary text-white px-8 py-3 rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary-container hover:scale-105 active:scale-95 transition-all font-bold flex items-center gap-2 group text-sm"
+              disabled={isSaving}
+              className={cn(
+                "px-8 py-3 rounded-2xl shadow-lg transition-all font-bold flex items-center gap-2 group text-sm",
+                isSaving 
+                  ? "bg-primary/50 text-white cursor-not-allowed"
+                  : "bg-primary text-white shadow-primary/20 hover:bg-primary-container hover:scale-105 active:scale-95"
+              )}
             >
-              <Save size={20} className="group-hover:translate-y-[-1px] transition-transform" />
-              Simpan Form
+              {isSaving ? (
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Save size={20} className="group-hover:translate-y-[-1px] transition-transform" />
+              )}
+              {isSaving ? 'Menyimpan...' : 'Simpan Form'}
             </button>
           </div>
         </div>

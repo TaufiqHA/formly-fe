@@ -11,11 +11,24 @@ export const formService = {
     return fetchApi(`/forms/${id}`, { method: 'DELETE' });
   },
 
+  // Mengambil detail satu form
+  getForm: async (id: string) => {
+    return fetchApi(`/forms/${id}`, { method: 'GET' });
+  },
+
   // Membuat form baru
   createForm: async (data: { title: string; description?: string }) => {
     return fetchApi('/forms', {
       method: 'POST',
       body: JSON.stringify(data),
     });
-  }
+  },
+
+  // Simpan / Update struktur field form sekaligus
+  updateFormFields: async (formId: string, fieldsData: any[]) => {
+    return fetchApi(`/forms/${formId}/fields`, {
+      method: 'PUT',
+      body: JSON.stringify({ fields: fieldsData }),
+    });
+  },
 };
