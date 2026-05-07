@@ -16,8 +16,8 @@ export default function CustomerBase() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-on-surface">Customer Base</h1>
-          <p className="text-on-surface-variant mt-1">Manage and analyze your active clientele.</p>
+          <h1 className="text-2xl sm:text-4xl font-bold text-on-surface">Customer Base</h1>
+          <p className="text-sm sm:text-base text-on-surface-variant mt-1">Manage and analyze your active clientele.</p>
         </div>
         <button className="bg-surface-container-lowest border border-outline-variant text-on-surface px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-surface-container-low transition-all shadow-sm">
           <Download size={18} />
@@ -63,7 +63,7 @@ export default function CustomerBase() {
               {customers.map((customer, idx) => (
                 <tr key={idx} className="border-b border-outline-variant hover:bg-surface-bright transition-colors group">
                   <td className="p-6 flex items-center gap-4">
-                    <div className={cn("w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm shadow-sm", customer.color)}>
+                    <div className={cn("w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0", customer.color)}>
                       {customer.id}
                     </div>
                     <span className="font-bold text-on-surface">{customer.name}</span>

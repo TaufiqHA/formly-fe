@@ -16,6 +16,7 @@ import Login from './views/Login';
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('overview');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const renderView = () => {
     switch (currentView) {
@@ -60,19 +61,25 @@ export default function App() {
   }
 
   return (
-    <div className="flex bg-surface-bright min-h-screen">
+    <div className="flex bg-surface-bright min-h-screen relative">
       <Sidebar 
         currentView={currentView} 
-        onViewChange={setCurrentView} 
+        onViewChange={(view) => {
+          setCurrentView(view);
+          setIsMobileMenuOpen(false);
+        }} 
         onLogout={() => {
           setIsAuthenticated(false);
           setCurrentView('overview');
         }}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar 
           currentView={currentView} 
           onViewChange={setCurrentView} 
+          onMenuClick={() => setIsMobileMenuOpen(true)}
         />
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">

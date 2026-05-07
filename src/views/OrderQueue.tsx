@@ -16,8 +16,8 @@ export default function OrderQueue({ onSelectOrder }: { onSelectOrder: () => voi
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-on-surface">Daftar Pesanan</h1>
-          <p className="text-on-surface-variant mt-1">Kelola dan pantau semua pesanan masuk dari pelanggan Anda.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-on-surface">Daftar Pesanan</h1>
+          <p className="text-sm sm:text-base text-on-surface-variant mt-1">Kelola dan pantau semua pesanan masuk dari pelanggan Anda.</p>
         </div>
       </div>
 
@@ -30,7 +30,7 @@ export default function OrderQueue({ onSelectOrder }: { onSelectOrder: () => voi
         ].map((stat, idx) => (
           <div key={idx} className="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant group hover:border-primary/30 transition-colors">
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{stat.label}</p>
-            <p className="text-3xl font-bold text-on-surface">{stat.value}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-on-surface">{stat.value}</p>
             <p className={cn("text-xs mt-3 flex items-center gap-1", stat.color)}>
                {stat.trend}
             </p>
@@ -106,18 +106,17 @@ export default function OrderQueue({ onSelectOrder }: { onSelectOrder: () => voi
           </table>
         </div>
 
-        <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
-          <span className="text-xs text-on-surface-variant">Menampilkan 1-5 dari 1,284 pesanan</span>
+        <div className="border-t border-outline-variant p-6 bg-surface flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Showing 1 to 5 of 1,284 entries</span>
           <div className="flex gap-1">
-            <button className="p-2 text-outline hover:text-primary transition-colors rounded hover:bg-surface-container-low disabled:opacity-30" disabled>
-              <ChevronLeft size={18} />
+            <button className="p-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-all" disabled>
+              <ChevronLeft size={20} />
             </button>
-            <button className="px-4 py-1.5 text-sm bg-primary text-white rounded-lg font-bold">1</button>
-            <button className="px-4 py-1.5 text-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">2</button>
-            <button className="px-4 py-1.5 text-sm text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">3</button>
-            <span className="px-2 py-1.5 text-outline">...</span>
-            <button className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded hover:bg-surface-container-low">
-              <ChevronRight size={18} />
+            <button className="px-5 py-2 rounded-lg bg-primary text-white font-bold text-xs ring-2 ring-primary/20">1</button>
+            <button className="px-5 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-bold text-xs">2</button>
+            <button className="px-5 py-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high font-bold text-xs">3</button>
+            <button className="p-2 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-all">
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>

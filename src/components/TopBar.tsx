@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Settings, FileText, CheckCircle2 } from 'lucide-react';
+import { Search, Bell, Settings, FileText, CheckCircle2, Menu, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ViewType } from './Sidebar';
 import { cn } from '../lib/utils';
@@ -7,9 +7,10 @@ import { cn } from '../lib/utils';
 interface TopBarProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
+  onMenuClick: () => void;
 }
 
-export default function TopBar({ currentView, onViewChange }: TopBarProps) {
+export default function TopBar({ currentView, onViewChange, onMenuClick }: TopBarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +31,19 @@ export default function TopBar({ currentView, onViewChange }: TopBarProps) {
 
   return (
     <header className="flex justify-between items-center h-16 px-6 bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-30 shadow-sm">
-      <div className="flex items-center gap-12">
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ml-2 text-on-surface-variant hover:bg-surface-container rounded-lg md:hidden transition-colors"
+        >
+          <Menu size={24} />
+        </button>
+        <div className="hidden md:flex items-center gap-2 group cursor-default">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-md group-hover:rotate-6 transition-transform">
+            <LayoutDashboard size={18} />
+          </div>
+          <h2 className="font-bold text-on-surface tracking-tight">Orderly</h2>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
@@ -104,7 +117,7 @@ export default function TopBar({ currentView, onViewChange }: TopBarProps) {
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuAusETVBoa3v1yNS7G3II5xdsLACSYMw3VKgQayx2V1ZyXaxeBtDl6fvhZ7nkjvbgpwW9Sb2m1urp-SF_BNNov-s1QPoIhiN3M_z9VSFoBuZyTm6GYp4ioDe1RTc5f7sQjQn1VjVFO3lOLpKvEeyPFovk-wuN6lGCKi5UI98D3XenoA5hLL7dILS7PCDppItpL9IlXkpIPPXA065CyjFdKCNH2pE5_ylcGqLKY-OFkiel_1pbkyFE3vk6wtdgxmRpO1tytFA0u3onSd"
           alt="User Profile"
           className={cn(
-            "w-9 h-9 rounded-full border border-outline-variant object-cover cursor-pointer hover:opacity-80 transition-all",
+            "w-9 h-9 rounded-full border border-outline-variant object-cover cursor-pointer hover:opacity-80 transition-all shrink-0",
             currentView === 'profile' && "ring-2 ring-primary ring-offset-2 border-primary"
           )}
         />

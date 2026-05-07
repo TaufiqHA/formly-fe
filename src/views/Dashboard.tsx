@@ -35,8 +35,8 @@ export default function Dashboard() {
       className="space-y-8"
     >
       <div>
-        <h1 className="text-4xl font-bold text-on-surface">Ringkasan Dashboard</h1>
-        <p className="text-on-surface-variant mt-1">Pantau performa pesanan dan pendapatan hari ini.</p>
+        <h1 className="text-2xl sm:text-4xl font-bold text-on-surface">Ringkasan Dashboard</h1>
+        <p className="text-sm sm:text-base text-on-surface-variant mt-1">Pantau performa pesanan dan pendapatan hari ini.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -57,8 +57,8 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="mt-auto">
-              <h3 className="text-3xl font-bold text-on-surface">{stat.value}</h3>
-              <p className="text-sm text-tertiary mt-2 flex items-center gap-1">
+              <h3 className="text-2xl sm:text-3xl font-bold text-on-surface">{stat.value}</h3>
+              <p className="text-xs sm:text-sm text-tertiary mt-2 flex items-center gap-1">
                 <TrendingUp size={16} />
                 {stat.change}
               </p>
