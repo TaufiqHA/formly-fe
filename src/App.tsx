@@ -13,11 +13,13 @@ import Profile from './views/Profile';
 import WhatsAppSettings from './views/WhatsAppSettings';
 import Login from './views/Login';
 import { authService } from './services/authService';
+import { formService } from './services/formService';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<ViewType>('overview');
+  const [selectedFormId, setSelectedFormId] = useState<string | undefined>(undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -71,13 +73,34 @@ export default function App() {
       case 'formList':
         return (
           <FormList 
-            onCreateNew={() => setCurrentView('builder')} 
-            onEdit={() => setCurrentView('builder')}
+            onCreateNew={async () => {
+              try {
+                const res = await formService.createForm({ title: 'Formulir Baru' });
+                if (res.success) {
+                  setSelectedFormId(res.data.id);
+                  setCurrentView('builder');
+                }
+              } catch (e) {
+                alert('Gagal membuat form baru');
+              }
+            }} 
+            onEdit={(id) => {
+              setSelectedFormId(id);
+              setCurrentView('builder');
+            }}
             onPreview={() => setCurrentView('publicForm')}
           />
         );
       case 'builder':
-        return <FormBuilder onBack={() => setCurrentView('formList')} />;
+        return (
+          <FormBuilder 
+            formId={selectedFormId}
+            onBack={() => {
+              setSelectedFormId(undefined);
+              setCurrentView('formList');
+            }} 
+          />
+        );
       case 'settings':
         return <Settings />;
       case 'profile':

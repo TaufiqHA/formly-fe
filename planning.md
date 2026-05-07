@@ -1,181 +1,129 @@
-# Planning Implementasi Endpoint `Forms` di Halaman FormList
+# Planning Implementasi Sinkronisasi Form Fields (Frontend)
 
-*(Catatan: Anda menyebutkan "di halaman profile", namun karena struktur data Formulir berada di halaman FormList, panduan ini difokuskan pada `src/views/FormList.tsx` agar logikanya tepat sasaran).*
+Dokumen ini berisi panduan untuk memperbaiki eror "No query results" dan menyelesaikan implementasi sinkronisasi *form fields* antara frontend dan backend.
 
-Dokumen ini berisi panduan langkah demi langkah untuk mengintegrasikan endpoint `/forms` (GET dan DELETE) dari backend ke halaman **FormList** di frontend (React). Panduan ini dirancang khusus agar sangat mudah dieksekusi oleh Junior Developer atau model AI.
+## 1. Perbaikan Akar Masalah (Dummy ID)
+Eror `No query results for model [App\Models\Form] dummy-id-123` terjadi karena aplikasi mencoba menyimpan data ke ID yang tidak ada di database. 
 
-## Tujuan
-Mengubah daftar formulir yang saat ini *hardcoded* di file `src/views/FormList.tsx` menjadi dinamis menggunakan API, serta mengaktifkan fitur hapus formulir ke *backend*.
+**Solusi:**
+- Pastikan `App.tsx` membuat form baru di database *sebelum* membuka FormBuilder.
+- Hilangkan nilai *default* `dummy-id-123` di `FormBuilder.tsx`.
 
 ---
 
-## Langkah 1: Buat Service API untuk Form
-Pertama, kita butuh abstraksi untuk memanggil endpoint `/forms`.
+## 2. Pembaruan Service (`src/services/formService.ts`)
+Tambahkan method `getForm` untuk mengambil detail form (termasuk fields-nya) saat FormBuilder dibuka.
 
-**Buat file baru di `src/services/formService.ts`:**
 ```typescript
-import { fetchApi } from '../lib/api';
-
-export const formService = {
-  // Mengambil daftar semua form
-  getForms: async () => {
-    return fetchApi('/forms', { method: 'GET' });
+// Tambahkan di dalam formService
+  getForm: async (id: string) => {
+    return fetchApi(`/forms/${id}`, { method: 'GET' });
   },
+```
 
-  // Menghapus form berdasarkan ID
-  deleteForm: async (id: string) => {
-    return fetchApi(`/forms/${id}`, { method: 'DELETE' });
-  },
+---
 
-  // (Opsional) Membuat form baru
-  createForm: async (data: { title: string; description?: string }) => {
-    return fetchApi('/forms', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
+## 3. Implementasi Fetch & Mapping di `FormBuilder.tsx`
+Buka `src/views/FormBuilder.tsx` dan tambahkan logika untuk memuat data dari backend.
+
+### 3.1. Fungsi Mapping Icon
+Karena backend hanya mengirim string `field_type`, kita butuh fungsi untuk mencocokkannya dengan ikon `lucide-react`.
+
+```typescript
+const getIconByType = (type: string) => {
+  const icons: Record<string, any> = {
+    text: Type,
+    para: AlignLeft,
+    drop: ChevronDown,
+    check: CheckSquare,
+    radio: Radio,
+    email: Mail,
+    phone: Phone,
+    address: MapPin,
+  };
+  return icons[type] || Type;
 };
 ```
 
----
+### 3.2. Fetch Data saat Mount
+Tambahkan `useEffect` untuk mengambil data jika `formId` tersedia.
 
-## Langkah 2: Sesuaikan Interface & State di `FormList.tsx`
-Buka file `src/views/FormList.tsx`.
-1. Tambahkan impor `useEffect` dan `formService`.
-2. Sesuaikan tipe data `FormItem` agar cocok dengan JSON dari backend.
-
-**Ubah bagian atas file (Interface & State):**
-```tsx
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, FileText, ExternalLink, Edit2, Calendar, Users, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { cn } from '../lib/utils';
-import { formService } from '../services/formService';
-
-// Sesuaikan interface dengan API_REFERENCE.md
-interface FormItem {
-  id: string;
-  title: string;
-  slug: string;
-  status: 'active' | 'draft';
-  total_submissions: number;
-  updated_at: string;
-}
-
-interface FormListProps {
-  onCreateNew: () => void;
-  onEdit: (id: string) => void;
-  onPreview: (id: string) => void;
-}
-
-export default function FormList({ onCreateNew, onEdit, onPreview }: FormListProps) {
-  // Inisialisasi state kosong
-  const [forms, setForms] = useState<FormItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Fetch data dari backend saat komponen dimuat
+```typescript
   useEffect(() => {
-    fetchForms();
-  }, []);
+    if (!formId) return;
 
-  const fetchForms = async () => {
-    setIsLoading(true);
-    try {
-      const response = await formService.getForms();
-      if (response.success) {
-        setForms(response.data);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Gagal memuat daftar formulir');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fungsi hapus form aktual
-  const handleDeleteForm = async (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus formulir ini?')) {
+    const loadFormData = async () => {
       try {
-        await formService.deleteForm(id);
-        // Hapus form dari state lokal tanpa reload halaman
-        setForms(forms.filter(f => f.id !== id));
-      } catch (err: any) {
-        alert('Gagal menghapus formulir: ' + err.message);
+        const res = await formService.getForm(formId);
+        if (res.success) {
+          setFormTitle(res.data.title);
+          setFormDescription(res.data.description || '');
+          
+          // Map fields dari backend ke format state lokal
+          const mappedFields = res.data.fields.map((f: any) => ({
+            id: f.id,
+            type: f.field_type,
+            label: f.label,
+            placeholder: f.placeholder || '',
+            required: !!f.is_required,
+            icon: getIconByType(f.field_type),
+            options: f.options || undefined
+          }));
+          
+          setFormElements(mappedFields);
+          if (mappedFields.length > 0) setActiveField(mappedFields[0].id);
+        }
+      } catch (e) {
+        console.error("Gagal memuat form", e);
       }
-    }
-  };
+    };
 
-  // Fungsi duplicate (sementara bisa mock atau panggil createForm API)
-  const handleDuplicateForm = async (form: FormItem) => {
+    loadFormData();
+  }, [formId]);
+```
+
+---
+
+## 4. Finalisasi Fungsi `handleSave`
+Pastikan fungsi `handleSave` mengirimkan data yang bersih (tanpa ID lokal sementara).
+
+```typescript
+  const handleSave = async () => {
+    if (!formId) return alert('Form ID tidak ditemukan');
+    setIsSaving(true);
+    
     try {
-      const response = await formService.createForm({
-        title: `${form.title} (Copy)`,
+      const formattedFields = formElements.map((el, index) => {
+        // Field baru biasanya ID-nya berupa timestamp (string angka saja)
+        // Backend mengharapkan ID asli (UUID) atau kosong jika baru.
+        const isNew = !isNaN(Number(el.id)); 
+        
+        return {
+          ...(isNew ? {} : { id: el.id }),
+          label: el.label,
+          field_type: el.type,
+          placeholder: el.placeholder,
+          is_required: el.required,
+          options: el.options || null,
+          sort_order: index
+        };
       });
-      if (response.success) {
-        fetchForms(); // Reload daftar form agar data sinkron dengan database
-      }
-    } catch (err: any) {
-      alert('Gagal menduplikat formulir: ' + err.message);
+
+      await formService.updateFormFields(formId, formattedFields);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (error: any) {
+      alert('Gagal menyimpan form: ' + error.message);
+    } finally {
+      setIsSaving(false);
     }
   };
-
-  // Format tanggal untuk UI
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', { 
-      day: '2-digit', month: 'short', year: 'numeric' 
-    });
-  };
-
-  // Tampilkan loading spinner jika sedang fetch data
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-primary" size={32} />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-error font-medium text-center">{error}</div>;
-  }
 ```
 
 ---
 
-## Langkah 3: Sesuaikan Pemanggilan Properti Data di JSX
-Karena nama *key* (properti) dari backend berbeda dengan yang lama, ubah referensi variabel pada blok JSX di bawahnya.
-
-**Cari dan ubah pada bagian render *card* formulir:**
-- Ubah `{form.submissions}` menjadi `{form.total_submissions}`
-- Ubah `{form.lastUpdated}` menjadi `{formatDate(form.updated_at)}`
-
-**Contoh JSX yang diperbarui:**
-```tsx
-              <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-outline-variant/30">
-                <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-on-surface-variant flex items-center gap-1.5 leading-none">
-                    <Users size={14} />
-                    {form.total_submissions} Submisi
-                  </span>
-                  <span className="text-on-surface-variant flex items-center gap-1.5 leading-none">
-                    <Calendar size={14} />
-                    {formatDate(form.updated_at)}
-                  </span>
-                </div>
-```
-
----
-
-## 4. Checklist Implementasi (Untuk Junior Dev / AI)
-Gunakan checklist ini untuk validasi:
-
-- [ ] Membuat file `src/services/formService.ts` untuk `getForms`, `deleteForm`, dan `createForm`.
-- [ ] Menyesuaikan tipe interface `FormItem` di `FormList.tsx` dengan respons backend (`slug`, `total_submissions`, `updated_at`).
-- [ ] Mengubah `useState` awal menjadi *array kosong* `[]` beserta statik `isLoading` dan `error`.
-- [ ] Menggunakan `useEffect` untuk memanggil `formService.getForms()` saat halaman dimuat.
-- [ ] Mengubah logika `handleDeleteForm` agar menembak API backend.
-- [ ] Mengubah logika `handleDuplicateForm` agar menembak API backend (`createForm`) lalu me-reload *list* form.
-- [ ] Mengubah properti statis pada UI dari `{form.submissions}` menjadi `{form.total_submissions}`.
-- [ ] Mengubah pemanggilan `{form.lastUpdated}` menggunakan fungsi `formatDate(form.updated_at)`.
-- [ ] Memastikan tidak ada *error TypeScript* (ts-lint) terkait perubahan struktur *interface*.
+## 5. Checklist Validasi
+- [ ] `App.tsx` sudah mengirimkan `formId` yang valid (hasil dari `createForm`).
+- [ ] `FormBuilder.tsx` berhasil menampilkan judul dan field yang sudah ada di database.
+- [ ] Tombol "Simpan Form" tidak lagi menghasilkan eror "dummy-id-123".
+- [ ] Perubahan urutan atau penambahan field tersimpan dengan benar di database.
