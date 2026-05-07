@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { Plus, Search, FileText, ExternalLink, Edit2, Calendar, Users, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, FileText, ExternalLink, Edit2, Calendar, Users, Trash2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { formService } from '../services/formService';
 
 interface FormItem {
   id: string;
   title: string;
-  submissions: number;
-  lastUpdated: string;
+  slug: string;
   status: 'active' | 'draft';
+  total_submissions: number;
+  updated_at: string;
 }
 
 interface FormListProps {
@@ -18,28 +20,79 @@ interface FormListProps {
 }
 
 export default function FormList({ onCreateNew, onEdit, onPreview }: FormListProps) {
-  const [forms, setForms] = useState<FormItem[]>([
-    { id: '1', title: 'Formulir Pemesanan Barang', submissions: 1248, lastUpdated: '12 Okt 2023', status: 'active' },
-    { id: '2', title: 'Registrasi Workshop Mingguan', submissions: 85, lastUpdated: '10 Okt 2023', status: 'active' },
-    { id: '3', title: 'Survey Kepuasan Pelanggan', submissions: 0, lastUpdated: '08 Okt 2023', status: 'draft' },
-  ]);
+  const [forms, setForms] = useState<FormItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleDeleteForm = (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus formulir ini?')) {
-      setForms(forms.filter(f => f.id !== id));
+  useEffect(() => {
+    fetchForms();
+  }, []);
+
+  const fetchForms = async () => {
+    setIsLoading(true);
+    try {
+      const response = await formService.getForms();
+      if (response.success) {
+        setForms(response.data);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Gagal memuat daftar formulir');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDuplicateForm = (form: FormItem) => {
-    const newForm: FormItem = {
-      ...form,
-      id: Date.now().toString(),
-      title: `${form.title} (Copy)`,
-      submissions: 0,
-      lastUpdated: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-    };
-    setForms([...forms, newForm]);
+  const handleDeleteForm = async (id: string) => {
+    if (confirm('Apakah Anda yakin ingin menghapus formulir ini?')) {
+      try {
+        await formService.deleteForm(id);
+        setForms(forms.filter(f => f.id !== id));
+      } catch (err: any) {
+        alert('Gagal menghapus formulir: ' + err.message);
+      }
+    }
   };
+
+  const handleDuplicateForm = async (form: FormItem) => {
+    try {
+      const response = await formService.createForm({
+        title: `${form.title} (Copy)`,
+      });
+      if (response.success) {
+        fetchForms();
+      }
+    } catch (err: any) {
+      alert('Gagal menduplikat formulir: ' + err.message);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', { 
+      day: '2-digit', month: 'short', year: 'numeric' 
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <p className="text-error font-medium">{error}</p>
+        <button 
+          onClick={fetchForms}
+          className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold"
+        >
+          Coba Lagi
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div 
@@ -124,11 +177,11 @@ export default function FormList({ onCreateNew, onEdit, onPreview }: FormListPro
                 <div className="flex items-center justify-between text-xs font-medium">
                   <span className="text-on-surface-variant flex items-center gap-1.5 leading-none">
                     <Users size={14} />
-                    {form.submissions} Submisi
+                    {form.total_submissions} Submisi
                   </span>
                   <span className="text-on-surface-variant flex items-center gap-1.5 leading-none">
                     <Calendar size={14} />
-                    {form.lastUpdated}
+                    {formatDate(form.updated_at)}
                   </span>
                 </div>
                 
