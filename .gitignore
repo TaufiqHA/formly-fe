@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+prompt
+GEMINI.md
+planning.md
+API_REFERENCE.md

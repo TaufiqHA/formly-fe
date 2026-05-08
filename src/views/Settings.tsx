@@ -1,8 +1,56 @@
-import React from 'react';
-import { Save, Bell, Shield, Palette, Globe, Mail } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Save, Bell, Shield, Palette, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { settingsService } from '../services/settingsService';
+import { Preferences } from '../types/settings';
 
 export default function Settings() {
+  const [preferences, setPreferences] = useState<Preferences>({
+    notif_email_new_order: true,
+    notif_wa_auto_confirm: true,
+    theme: 'light'
+  });
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await settingsService.getSettings();
+        if (res.success) {
+          setPreferences(res.data.preferences);
+        }
+      } catch (error) {
+        console.error("Gagal memuat settings", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setIsSubmitting(true);
+      const res = await settingsService.updatePreferences(preferences);
+      if (res.success) {
+        alert(res.message || "Pengaturan berhasil disimpan");
+      }
+    } catch (error: any) {
+      alert("Gagal menyimpan: " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -32,14 +80,24 @@ export default function Settings() {
                 <p className="font-medium text-on-surface">Email Pesanan Baru</p>
                 <p className="text-xs text-on-surface-variant">Terima email setiap ada pesanan masuk.</p>
               </div>
-              <input type="checkbox" defaultChecked className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" />
+              <input 
+                type="checkbox" 
+                checked={preferences.notif_email_new_order}
+                onChange={(e) => setPreferences({ ...preferences, notif_email_new_order: e.target.checked })}
+                className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" 
+              />
             </div>
             <div className="flex items-center justify-between py-2 border-b border-outline-variant/30">
               <div>
                 <p className="font-medium text-on-surface">Pesan WhatsApp</p>
                 <p className="text-xs text-on-surface-variant">Kirim konfirmasi otomatis ke pelanggan.</p>
               </div>
-              <input type="checkbox" defaultChecked className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" />
+              <input 
+                type="checkbox" 
+                checked={preferences.notif_wa_auto_confirm}
+                onChange={(e) => setPreferences({ ...preferences, notif_wa_auto_confirm: e.target.checked })}
+                className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" 
+              />
             </div>
           </div>
         </div>
@@ -73,19 +131,37 @@ export default function Settings() {
             </div>
           </div>
           <div className="flex gap-4">
-            <button className="flex-1 p-4 border-2 border-primary bg-primary/5 rounded-xl text-center">
-              <p className="font-bold text-sm text-primary">Terang</p>
+            <button 
+              onClick={() => setPreferences({ ...preferences, theme: 'light' })}
+              className={`flex-1 p-4 border-2 rounded-xl text-center transition-all ${
+                preferences.theme === 'light' 
+                  ? 'border-primary bg-primary/5 text-primary' 
+                  : 'border-outline-variant hover:bg-surface-container-high text-on-surface-variant'
+              }`}
+            >
+              <p className="font-bold text-sm">Terang</p>
             </button>
-            <button className="flex-1 p-4 border border-outline-variant rounded-xl text-center hover:bg-surface-container-high">
-              <p className="font-bold text-sm text-on-surface-variant">Gelap</p>
+            <button 
+              onClick={() => setPreferences({ ...preferences, theme: 'dark' })}
+              className={`flex-1 p-4 border-2 rounded-xl text-center transition-all ${
+                preferences.theme === 'dark' 
+                  ? 'border-primary bg-primary/5 text-primary' 
+                  : 'border-outline-variant hover:bg-surface-container-high text-on-surface-variant'
+              }`}
+            >
+              <p className="font-bold text-sm">Gelap</p>
             </button>
           </div>
         </div>
       </div>
 
       <div className="flex justify-end pt-4">
-        <button className="bg-primary text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-container transition-all shadow-lg active:scale-95">
-          <Save size={20} />
+        <button 
+          onClick={handleSave}
+          disabled={isSubmitting}
+          className="bg-primary text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-container transition-all shadow-lg active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
           Simpan Perubahan
         </button>
       </div>

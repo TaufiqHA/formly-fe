@@ -142,13 +142,13 @@ export default function SubmissionDetails({ submissionId, onBack }: SubmissionDe
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
               <div>
                 <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest block mb-1">Nama Lengkap</label>
-                <p className="font-semibold text-on-surface">{submission.customer_name || '-'}</p>
+                <p className="font-semibold text-on-surface">{submission.customer_name || submission.name || '-'}</p>
               </div>
               <div>
                 <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest block mb-1">Nomor WhatsApp</label>
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold text-on-surface">{submission.customer_phone || '-'}</p>
-                  {submission.customer_phone && (
+                  <p className="font-semibold text-on-surface">{submission.customer_phone || submission.phone || submission.whatsapp || '-'}</p>
+                  {(submission.customer_phone || submission.phone || submission.whatsapp) && (
                     <button className="text-[#25D366] hover:bg-[#25D366]/10 p-1 rounded-full transition-colors">
                       <MessageCircle size={18} fill="currentColor" />
                     </button>

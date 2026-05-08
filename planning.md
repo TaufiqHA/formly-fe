@@ -1,117 +1,129 @@
-# Planning Implementasi Tombol Kembali di Halaman Preview
+# Planning: Implementasi Endpoint Analytics
 
-Dokumen ini berisi panduan teknis untuk mengimplementasikan fitur navigasi "Tombol Kembali" pada halaman `PublicForm` saat aplikasi berada dalam mode *Preview*. Panduan ini dirancang sangat sederhana agar dapat langsung dieksekusi oleh Junior Developer maupun AI Assistant.
+Dokumen ini berisi langkah-langkah detail untuk mengimplementasikan endpoint **Analytics** berdasarkan `API_REFERENCE.md`. Panduan ini dirancang khusus agar mudah dieksekusi oleh *junior developer* atau *model AI*.
 
-## 🎯 Tujuan
-Menambahkan tombol "Kembali ke Dashboard" di pojok atas halaman formulir **HANYA** saat admin sedang melihat *Preview* form. Tombol ini tidak akan muncul saat pelanggan (publik) mengakses formulir melalui URL asli.
-
----
-
-## 🛠️ Langkah 1: Update File `PublicForm.tsx`
-Kita akan menambahkan prop `onBack` dan merender UI tombol secara kondisional jika `previewId` ada.
-
-**File Target:** `src/views/PublicForm.tsx`
-
-**Panduan Implementasi:**
-1. **Tambahkan Icon:** Pada baris paling atas, tambahkan `ArrowLeft` ke dalam daftar import `lucide-react`:
-   ```tsx
-   import { Send, CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
-   ```
-
-2. **Update Props:** Ubah definisi argumen fungsi `PublicForm` agar menerima prop `onBack`:
-   ```tsx
-   export default function PublicForm({ slug, previewId, onBack }: { slug?: string, previewId?: string, onBack?: () => void }) {
-   ```
-
-3. **Render UI Tombol:** Cari bagian kode yang merender Header formulir. Biasanya terlihat seperti ini:
-   ```tsx
-   <div className="px-8 py-10 relative bg-primary/5 border-b border-outline-variant">
-     <h1 className="text-3xl font-bold text-on-surface tracking-tight mb-2">{formConfig.title}</h1>
-   ```
-   
-   **Tambahkan kode tombol di atas elemen `<h1>`:**
-   ```tsx
-   <div className="px-8 py-10 relative bg-primary/5 border-b border-outline-variant">
-     {/* === TAMBAHAN KODE TOMBOL KEMBALI === */}
-     {previewId && onBack && (
-       <button 
-         onClick={onBack}
-         type="button"
-         className="mb-6 flex items-center gap-2 text-sm font-bold text-primary bg-white px-4 py-2 rounded-full border border-primary/20 hover:bg-primary/10 transition-colors shadow-sm w-fit group"
-       >
-         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-         Kembali ke Dashboard
-       </button>
-     )}
-     {/* === BATAS KODE TAMBAHAN === */}
-     
-     <h1 className="text-3xl font-bold text-on-surface tracking-tight mb-2">{formConfig.title}</h1>
-   ```
+## Daftar Endpoint yang Akan Diimplementasikan
+Berdasarkan dokumentasi API, terdapat 3 endpoint untuk Analytics:
+1. `GET /analytics/summary` - Mengambil Ringkasan KPI (Total responses, active forms, dll).
+2. `GET /analytics/trend` - Mengambil data chart untuk trend response harian.
+3. `GET /analytics/status-distribution` - Mengambil data distribusi status submission/order.
 
 ---
 
-## 💻 Langkah 2: Passing Fungsi `onBack` di `App.tsx`
-Karena `PublicForm` sekarang mengharapkan prop `onBack`, kita perlu mengaturnya di file routing utama (`App.tsx`) agar tombol tersebut berfungsi untuk mengembalikan state halaman.
+## Langkah 1: Buat Interface/Tipe Data Analytics
+Mendefinisikan *TypeScript Interfaces* untuk data balikan dari API agar mempermudah penulisan kode (Type Safety).
 
-**File Target:** `src/App.tsx`
+**File Target:** `src/types/analytics.ts` (Buat file jika belum ada)
+```typescript
+export interface AnalyticsSummary {
+  total_responses: number;
+  active_forms: number;
+  average_conversion: number;
+}
 
-**Panduan Implementasi:**
-Cari pemanggilan `<PublicForm ... />` di dalam `App.tsx`. Biasanya terdapat di 2 tempat:
+export interface AnalyticsTrend {
+  name: string;
+  value: number;
+}
 
-1. Di dalam fungsi `renderView()`, pada blok `case 'publicForm':`
-   **Ubah menjadi:**
-   ```tsx
-      case 'publicForm':
-        return (
-          <PublicForm 
-            slug={publicFormSlug || ''} 
-            previewId={previewFormId || undefined} 
-            onBack={() => {
-              setPreviewFormId(null);
-              setPublicFormSlug(null);
-              setCurrentView('formList');
-            }}
-          />
-        );
-   ```
+export interface AnalyticsStatusDistribution {
+  status: string;
+  count: number;
+}
 
-2. Di bagian bawah (Special Layout Bypass) sebelum `return` utama:
-   Cari blok kode ini:
-   ```tsx
-     // Special layout for Public Form
-     if (currentView === 'publicForm') {
-       return <PublicForm slug={publicFormSlug || ''} previewId={previewFormId || undefined} />;
-     }
-   ```
-   **Ubah menjadi:**
-   ```tsx
-     // Special layout for Public Form
-     if (currentView === 'publicForm') {
-       return (
-         <PublicForm 
-           slug={publicFormSlug || ''} 
-           previewId={previewFormId || undefined} 
-           onBack={() => {
-             setPreviewFormId(null);
-             setPublicFormSlug(null);
-             setCurrentView('formList');
-           }} 
-         />
-       );
-     }
-   ```
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+```
 
 ---
 
-## ✅ Panduan QA / Pengujian untuk Developer
-1. **Skenario Mode Preview:**
-   - Login sebagai admin.
-   - Buka menu Formulir.
-   - Klik aksi "Preview" (ikon mata) pada salah satu daftar form.
-   - **Ekspektasi:** Formulir terbuka, dan terdapat tombol "Kembali ke Dashboard" dengan panah kiri di atas judul formulir.
-2. **Skenario Fungsi Navigasi:**
-   - Klik tombol "Kembali ke Dashboard" yang muncul di halaman preview.
-   - **Ekspektasi:** Tampilan langsung beralih kembali ke halaman Daftar Formulir tanpa melakukan *refresh browser*.
-3. **Skenario Mode Publik Asli:**
-   - Buka tautan publik asli formulir (misal dengan mengakses `http://localhost:3000/?f=slug-form`).
-   - **Ekspektasi:** Formulir terbuka normal, **TIDAK ADA** tombol kembali yang muncul (karena `previewId` kosong).
+## Langkah 2: Buat Service API Analytics
+Membuat file service yang menangani seluruh komunikasi ke endpoint `/analytics`.
+
+**File Target:** `src/services/analyticsService.ts` (Buat file baru)
+```typescript
+import { fetchApi } from '../lib/api';
+import { 
+  AnalyticsSummary, 
+  AnalyticsTrend, 
+  AnalyticsStatusDistribution, 
+  ApiResponse 
+} from '../types/analytics';
+
+export const analyticsService = {
+  // GET /analytics/summary
+  getSummary: async (): Promise<ApiResponse<AnalyticsSummary>> => {
+    return fetchApi('/analytics/summary', { method: 'GET' });
+  },
+
+  // GET /analytics/trend
+  getTrend: async (): Promise<ApiResponse<AnalyticsTrend[]>> => {
+    return fetchApi('/analytics/trend', { method: 'GET' });
+  },
+
+  // GET /analytics/status-distribution
+  getStatusDistribution: async (): Promise<ApiResponse<AnalyticsStatusDistribution[]>> => {
+    return fetchApi('/analytics/status-distribution', { method: 'GET' });
+  }
+};
+```
+
+---
+
+## Langkah 3: Integrasi dengan Halaman Dashboard
+Menghubungkan data dari API dengan antarmuka pengguna pada halaman Dashboard.
+
+**File Target:** `src/views/Dashboard.tsx`
+
+**Instruksi Kerja:**
+1. **Import Service & Types**: Import `analyticsService` ke dalam `Dashboard.tsx`.
+2. **Setup State**: Buat state baru untuk menyimpan data API dan status loading.
+   ```tsx
+   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
+   const [trendData, setTrendData] = useState<AnalyticsTrend[]>([]);
+   const [statusData, setStatusData] = useState<AnalyticsStatusDistribution[]>([]);
+   const [isLoading, setIsLoading] = useState(true);
+   ```
+3. **Fetch Data di `useEffect`**: Panggil ketiga endpoint tersebut secara paralel saat komponen dimuat (mounting).
+   ```tsx
+   useEffect(() => {
+     const fetchDashboardData = async () => {
+       try {
+         setIsLoading(true);
+         const [summaryRes, trendRes, statusRes] = await Promise.all([
+           analyticsService.getSummary(),
+           analyticsService.getTrend(),
+           analyticsService.getStatusDistribution()
+         ]);
+
+         if (summaryRes.success) setSummary(summaryRes.data);
+         if (trendRes.success) setTrendData(trendRes.data);
+         if (statusRes.success) setStatusData(statusRes.data);
+       } catch (error) {
+         console.error("Failed to fetch analytics data", error);
+       } finally {
+         setIsLoading(false);
+       }
+     };
+
+     fetchDashboardData();
+   }, []);
+   ```
+4. **Implementasi Skeleton Loading**: Jika `isLoading === true`, tampilkan loading skeleton atau icon `Loader2` dari `lucide-react`.
+5. **Mapping Data ke UI**:
+   - Ganti *hardcoded number* pada **Summary Cards** (Total Response, Active Forms, dll) menggunakan variabel state `summary` (misal: `summary?.total_responses`).
+   - Ganti *mock data* pada chart/grafik di *Dashboard* menggunakan variabel state `trendData`.
+   - Tampilkan proporsi status pesanan di UI (jika ada komponen *pie chart* atau progress bar) menggunakan data dari `statusData`.
+
+---
+
+## Checklist Penyelesaian (Definition of Done)
+- [ ] File `src/types/analytics.ts` telah terbuat dan menggunakan interface yang sesuai dengan struktur JSON API.
+- [ ] File `src/services/analyticsService.ts` telah dibuat dan mengekspor 3 fungsi yang memanggil `fetchApi`.
+- [ ] Pada file `src/views/Dashboard.tsx`, data statis (*hardcoded/mock data*) telah digantikan dengan *state* React.
+- [ ] Terlihat *loading state* (spinner/skeleton) saat data Dashboard sedang dimuat dari server.
+- [ ] Buka browser dan pastikan tab "Network" (*Developer Tools*) memperlihatkan 3 buah request ke endpoint `/analytics` menghasilkan respons HTTP `200 OK`.
+- [ ] UI Dashboard berhasil merender data *Summary*, *Trend*, dan *Status Distribution* dengan benar dan tanpa *error* JavaScript di *console*.

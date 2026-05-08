@@ -16,6 +16,9 @@ export interface Submission {
   submission_number: string;
   customer_name?: string;
   customer_phone?: string;
+  name?: string;
+  phone?: string;
+  whatsapp?: string;
   form_title?: string;
   status: 'new' | 'read' | 'done' | string;
   submitted_at: string;

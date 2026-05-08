@@ -1,12 +1,35 @@
 buat planning.md untuk : 
 
-implementasikan endpoint submission yang ada di API_REFERENCE.md di project ini
+implementasikan endpoint analytics yang ada di API_REFERENCE.md di project ini
 
 buat agar mudah diimplementasikan oleh junior dev atau model AI  yang lebih murah
 
 
 buat planning.md untuk : 
 
-buat buat tombol kembali di halaman preview
+tambahkan field nama dan nomor whatsapp di halaman public
+
+buat agar mudah diimplementasikan oleh junior dev atau model AI  yang lebih murah
+
+
+
+buat issue.md untuk : 
+
+fix bug Uncaught TypeError: recentSubmissions.map is not a function
+    Dashboard Dashboard.tsx:221
+    React 10
+    performWorkUntilDeadline scheduler.development.js:45
+    js scheduler.development.js:223
+    js scheduler.development.js:364
+    __require2 chunk-2TUXWMP5.js:15
+    js index.js:6
+    __require2 chunk-2TUXWMP5.js:15
+    React 2
+    __require2 chunk-2TUXWMP5.js:15
+    js React
+    __require2 chunk-2TUXWMP5.js:15
+    <anonymous> react-dom_client.js:20192
+Dashboard.tsx:221:34
+, buat langkah langkah yang lengkap unutk perbaiki bug ini
 
 buat agar mudah diimplementasikan oleh junior dev atau model AI  yang lebih murah
