@@ -18,11 +18,24 @@ import { formService } from './services/formService';
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<ViewType>('overview');
+  const [currentView, setCurrentView] = useState<ViewType | 'publicForm'>('overview');
   const [selectedFormId, setSelectedFormId] = useState<string | undefined>(undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [publicFormSlug, setPublicFormSlug] = useState<string | null>(null);
+  const [previewFormId, setPreviewFormId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Cek apakah ini URL public form
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('f');
+    if (slug) {
+      setPublicFormSlug(slug);
+      setPreviewFormId(null);
+      setCurrentView('publicForm');
+      setIsLoading(false);
+      return; // Bypass auth check for public form
+    }
+
     // Cek apakah ada token di localStorage saat mount
     const checkAuth = async () => {
       const token = localStorage.getItem('auth_token');
@@ -88,7 +101,11 @@ export default function App() {
               setSelectedFormId(id);
               setCurrentView('builder');
             }}
-            onPreview={() => setCurrentView('publicForm')}
+            onPreview={(id) => {
+              setPreviewFormId(id);
+              setPublicFormSlug(null);
+              setCurrentView('publicForm');
+            }}
           />
         );
       case 'builder':
@@ -108,7 +125,7 @@ export default function App() {
       case 'whatsapp':
         return <WhatsAppSettings />;
       case 'publicForm':
-        return <PublicForm />;
+        return <PublicForm slug={publicFormSlug || ''} previewId={previewFormId || undefined} />;
       default:
         return <Dashboard />;
     }
@@ -118,7 +135,7 @@ export default function App() {
 
   // Special layout for Public Form
   if (currentView === 'publicForm') {
-    return <PublicForm />;
+    return <PublicForm slug={publicFormSlug || ''} previewId={previewFormId || undefined} />;
   }
 
   if (!isAuthenticated) {
