@@ -1,118 +1,284 @@
-import React from 'react';
-import { Send, Image as ImageIcon, MapPin, Truck, CheckCircle, Package } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { publicService } from '../services/publicService';
+import { formService } from '../services/formService';
 
-export default function PublicForm() {
+interface Field {
+  id: string;
+  label: string;
+  field_type: string;
+  is_required: boolean;
+  options: string[] | null;
+}
+
+interface FormConfig {
+  id: string;
+  title: string;
+  description: string;
+  fields: Field[];
+}
+
+export default function PublicForm({ slug, previewId }: { slug?: string, previewId?: string }) {
+  const [formConfig, setFormConfig] = useState<FormConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [values, setValues] = useState<Record<string, any>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [successData, setSuccessData] = useState<{ submission_number?: string, wa_redirect_url?: string }>({});
+
+  useEffect(() => {
+    if (!slug && !previewId) {
+      setError('Form tidak ditemukan.');
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchForm = async () => {
+      try {
+        setIsLoading(true);
+        // Jika previewId ada, ambil dari formService (authenticated) agar bisa baca DRAFT.
+        // Jika tidak, gunakan publicService (unauthenticated).
+        const res = previewId 
+          ? await formService.getForm(previewId) 
+          : await publicService.getPublicForm(slug!);
+
+        if (res.success) {
+          setFormConfig(res.data);
+        } else {
+          setError(res.message || 'Form tidak ditemukan.');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Terjadi kesalahan saat memuat form.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchForm();
+  }, [slug, previewId]);
+
+  const handleChange = (fieldId: string, value: any) => {
+    setValues((prev) => ({ ...prev, [fieldId]: value }));
+  };
+
+  const handleCheckboxChange = (fieldId: string, option: string, checked: boolean) => {
+    setValues((prev) => {
+      const current = prev[fieldId] || [];
+      if (checked) {
+        return { ...prev, [fieldId]: [...current, option] };
+      } else {
+        return { ...prev, [fieldId]: current.filter((o: string) => o !== option) };
+      }
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formConfig) return;
+
+    if (previewId) {
+      alert("Ini adalah mode Preview. Form tidak dapat di-submit.");
+      return;
+    }
+
+    // Validate required fields
+    for (const field of formConfig.fields) {
+      if (field.is_required && (!values[field.id] || values[field.id].length === 0)) {
+        alert(`Kolom "${field.label}" wajib diisi.`);
+        return;
+      }
+    }
+
+    try {
+      setIsSubmitting(true);
+      const res = await publicService.submitPublicForm(slug, values);
+      if (res.success) {
+        setIsSuccess(true);
+        setSuccessData(res.data);
+      } else {
+        alert(res.message || 'Gagal mengirim form.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Terjadi kesalahan saat mengirim form.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-surface-container-lowest flex flex-col items-center justify-center py-12 px-4">
+        <Loader2 className="animate-spin text-primary w-12 h-12 mb-4" />
+        <p className="text-on-surface-variant font-medium">Memuat form...</p>
+      </div>
+    );
+  }
+
+  if (error || !formConfig) {
+    return (
+      <div className="min-h-screen bg-surface-container-lowest flex flex-col items-center justify-center py-12 px-4">
+        <AlertCircle className="text-error w-16 h-16 mb-4" />
+        <h2 className="text-2xl font-bold text-on-surface mb-2">Oops!</h2>
+        <p className="text-on-surface-variant">{error}</p>
+      </div>
+    );
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-surface-container-lowest flex flex-col items-center py-12 px-4">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-full max-w-lg bg-white border border-outline-variant rounded-3xl shadow-2xl overflow-hidden p-8 text-center"
+        >
+          <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={40} />
+          </div>
+          <h2 className="text-3xl font-bold text-on-surface mb-4">Berhasil Dikirim!</h2>
+          <p className="text-on-surface-variant mb-6">
+            Terima kasih telah mengisi formulir <strong>{formConfig.title}</strong>.
+          </p>
+          {successData.submission_number && (
+            <div className="bg-surface py-3 px-4 rounded-xl inline-block mb-8">
+              <span className="text-sm text-on-surface-variant">Nomor Pesanan:</span>
+              <span className="ml-2 font-bold text-primary">{successData.submission_number}</span>
+            </div>
+          )}
+          
+          {successData.wa_redirect_url && (
+            <a 
+              href={successData.wa_redirect_url} 
+              target="_blank" 
+              rel="noreferrer"
+              className="block w-full bg-primary text-white py-4 rounded-2xl font-bold hover:bg-primary-container transition-all shadow-lg text-lg"
+            >
+              Lanjutkan ke WhatsApp
+            </a>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface-container-lowest flex flex-col items-center py-12 px-4 font-sans selection:bg-primary selection:text-white">
-      <div className="w-full max-w-2xl bg-white border border-outline-variant rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-700">
-        <div className="h-48 relative overflow-hidden">
-          <img 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_-AQwhxnCi8Zg65o1u0ux3ItPCD9hPATrkB8YNW1h0sRS6QYl7jv4orSQTcg3_8RBO4WCGunTXGPakuYw6CcqwiQxMrazwnVV0o2roSfRhpOh0LiH5K0Pi7rslK_cb7MYA8lr4pgR6lWiaPm9tRaIDsIOEpeCLl39bGFgmYw-j5DN_-Hdzj-0CugOX6hzK7uJ0S0IKKxMXV-2osQirB1Ysd7fCRjrHTuHgw-9EzICjhBm_SS1pze5crFCXGcSrXkxrTNSGMVODQ36" 
-            alt="Logistic Header"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent" />
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-2xl bg-white border border-outline-variant rounded-3xl shadow-2xl overflow-hidden"
+      >
+        <div className="px-8 py-10 relative bg-primary/5 border-b border-outline-variant">
+          <h1 className="text-3xl font-bold text-on-surface tracking-tight mb-2">{formConfig.title}</h1>
+          {formConfig.description && (
+            <p className="text-on-surface-variant leading-relaxed">
+              {formConfig.description}
+            </p>
+          )}
         </div>
 
-        <div className="px-8 pb-12 -mt-12 relative">
-          <div className="bg-white p-6 rounded-2xl border border-outline-variant shadow-lg mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
-                <Truck size={28} />
-              </div>
-              <h1 className="text-3xl font-bold text-on-surface tracking-tight">Formulir Pesanan Global</h1>
-            </div>
-            <p className="text-on-surface-variant leading-relaxed">
-              Silakan lengkapi informasi di bawah ini untuk memulai pengiriman kargo Anda. Tim logistik kami akan segera menghubungi Anda.
-            </p>
-          </div>
-
-          <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
-            <div className="space-y-6">
-              <h3 className="text-lg font-bold text-on-surface flex items-center gap-2 border-l-4 border-primary pl-3">
-                Identitas Pengirim
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-on-surface">Nama Lengkap <span className="text-error">*</span></label>
+        <div className="px-8 py-8 relative">
+          <form className="space-y-8" onSubmit={handleSubmit}>
+            {formConfig.fields.map((field) => (
+              <div key={field.id} className="space-y-2">
+                <label className="text-sm font-bold text-on-surface">
+                  {field.label} {field.is_required && <span className="text-error">*</span>}
+                </label>
+                
+                {field.field_type === 'text' && (
                   <input 
                     type="text" 
-                    placeholder="Masukkan nama lengkap" 
+                    required={field.is_required}
+                    value={values[field.id] || ''}
+                    onChange={(e) => handleChange(field.id, e.target.value)}
                     className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline"
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-on-surface">Nomor WhatsApp <span className="text-error">*</span></label>
-                  <input 
-                    type="tel" 
-                    placeholder="Contoh: 081234567890" 
-                    className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline"
-                  />
-                </div>
-              </div>
+                )}
 
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface">Alamat Pengambilan <span className="text-error">*</span></label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3.5 text-outline" size={18} />
+                {field.field_type === 'textarea' && (
                   <textarea 
+                    required={field.is_required}
                     rows={3}
-                    placeholder="Tuliskan alamat lengkap pengambilan barang" 
-                    className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline resize-none"
+                    value={values[field.id] || ''}
+                    onChange={(e) => handleChange(field.id, e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline resize-none"
                   />
-                </div>
+                )}
+
+                {field.field_type === 'radio' && field.options && (
+                  <div className="space-y-2">
+                    {field.options.map((opt) => (
+                      <label key={opt} className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-outline-variant hover:border-primary/50 transition-colors bg-surface">
+                        <input 
+                          type="radio" 
+                          name={field.id}
+                          value={opt}
+                          required={field.is_required && !values[field.id]}
+                          checked={values[field.id] === opt}
+                          onChange={(e) => handleChange(field.id, e.target.value)}
+                          className="w-5 h-5 text-primary focus:ring-primary border-outline-variant"
+                        />
+                        <span className="text-on-surface">{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {field.field_type === 'checkbox' && field.options && (
+                  <div className="space-y-2">
+                    {field.options.map((opt) => {
+                      const isChecked = (values[field.id] || []).includes(opt);
+                      return (
+                        <label key={opt} className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-outline-variant hover:border-primary/50 transition-colors bg-surface">
+                          <input 
+                            type="checkbox" 
+                            value={opt}
+                            checked={isChecked}
+                            onChange={(e) => handleCheckboxChange(field.id, opt, e.target.checked)}
+                            className="w-5 h-5 text-primary focus:ring-primary border-outline-variant rounded"
+                          />
+                          <span className="text-on-surface">{opt}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                {field.field_type === 'select' && field.options && (
+                  <select
+                    required={field.is_required}
+                    value={values[field.id] || ''}
+                    onChange={(e) => handleChange(field.id, e.target.value)}
+                    className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none"
+                  >
+                    <option value="" disabled>Pilih salah satu...</option>
+                    {field.options.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                )}
               </div>
-            </div>
+            ))}
 
-            <div className="space-y-6">
-              <h3 className="text-lg font-bold text-on-surface flex items-center gap-2 border-l-4 border-primary pl-3">
-                Detail Muatan
-              </h3>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface">Jenis Layanan</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {[
-                    { id: 'fcl', label: 'Full Container', icon: Package },
-                    { id: 'lcl', label: 'Less Container', icon: ImageIcon },
-                    { id: 'express', label: 'Express Air', icon: Send },
-                  ].map((service) => (
-                    <label key={service.id} className="relative group cursor-pointer">
-                      <input type="radio" name="service" className="sr-only peer" defaultChecked={service.id === 'fcl'} />
-                      <div className="flex flex-col items-center gap-2 p-4 bg-surface border border-outline-variant rounded-xl group-hover:border-primary transition-all peer-checked:bg-primary/5 peer-checked:border-primary peer-checked:ring-4 peer-checked:ring-primary/5">
-                        <service.icon size={20} className="text-on-surface-variant peer-checked:text-primary" />
-                        <span className="text-xs font-bold text-on-surface">{service.label}</span>
-                        <CheckCircle size={14} className="absolute top-2 right-2 text-primary opacity-0 peer-checked:opacity-100 transition-opacity" />
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface">Estimasi Berat (Ton)</label>
-                <input 
-                  type="number" 
-                  placeholder="0" 
-                  className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface">Instruksi Khusus (Opsional)</label>
-                <textarea 
-                  rows={2}
-                  placeholder="Ada instruksi tambahan untuk tim operasional?" 
-                  className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline resize-none"
-                />
-              </div>
-            </div>
-
-            <button className="w-full bg-primary text-white py-4 rounded-2xl text-xl font-bold hover:bg-primary-container transition-all shadow-xl hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 mt-12 group">
-              Kirim Pesanan
-              <Send size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-primary text-white py-4 rounded-2xl text-xl font-bold hover:bg-primary-container transition-all shadow-xl hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 mt-12 group disabled:opacity-70 disabled:pointer-events-none"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={24} className="animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                <>
+                  Kirim Jawaban
+                  <Send size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 
@@ -121,10 +287,10 @@ export default function PublicForm() {
             <h2 className="text-2xl font-black text-primary italic tracking-tight">Formly</h2>
           </div>
         </div>
-      </div>
+      </motion.div>
       
       <p className="mt-8 text-xs text-on-surface-variant font-medium opacity-60">
-        Protected by SecureOrder™ Encryption. © 2023 Formly Systems.
+        Protected by SecureOrder™ Encryption. © {new Date().getFullYear()} Formly Systems.
       </p>
     </div>
   );
