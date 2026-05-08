@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Type, AlignLeft, ChevronDown, CheckSquare, Radio, Mail, Phone, MapPin, Edit, Copy, Trash2, Save, Layout, CheckCircle2, LayoutDashboard, Loader2 } from 'lucide-react';
+import { Type, AlignLeft, ChevronDown, CheckSquare, Radio, Mail, Phone, MapPin, Edit, Copy, Trash2, Save, Layout, CheckCircle2, LayoutDashboard, Loader2, Share2, Link as LinkIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { formService } from '../services/formService';
@@ -42,6 +42,12 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isToolboxOpen, setIsToolboxOpen] = useState(false);
+  
+  // States for Publishing
+  const [formStatus, setFormStatus] = useState<'draft' | 'active'>('draft');
+  const [formSlug, setFormSlug] = useState<string>('');
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   useEffect(() => {
     if (!formId) {
@@ -55,6 +61,8 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
         if (res.success) {
           setFormTitle(res.data.title);
           setFormDescription(res.data.description || '');
+          setFormStatus(res.data.status);
+          setFormSlug(res.data.slug);
           
           // Map fields dari backend ke format state lokal
           const mappedFields = res.data.fields.map((f: any) => ({
@@ -224,6 +232,32 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
     }
   };
 
+  const handlePublish = async () => {
+    if (!formId) return;
+    setIsPublishing(true);
+    try {
+      // Disarankan untuk menyimpan form (handleSave) sebelum publish
+      await handleSave();
+      
+      const res = await formService.updateFormStatus(formId, 'active');
+      if (res.success) {
+        setFormStatus('active');
+        setFormSlug(res.data.slug);
+      }
+    } catch (e) {
+      alert("Gagal mem-publish form.");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const publicUrl = formSlug ? `${window.location.origin}/?f=${formSlug}` : '';
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(publicUrl);
+    alert("Link disalin ke clipboard!");
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-surface-container-low gap-4 animate-in fade-in duration-500">
@@ -342,10 +376,22 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end mr-2">
-              <span className="text-[10px] font-bold text-outline uppercase tracking-widest leading-none">Draft Otomatis</span>
-              <span className="text-[11px] text-on-surface-variant font-medium">Tersimpan 1 Menit Lalu</span>
+            <div className="hidden lg:flex flex-col items-end mr-2">
+              <span className="text-[10px] font-bold text-outline uppercase tracking-widest leading-none">Status</span>
+              <span className={cn(
+                "text-[11px] font-medium capitalize",
+                formStatus === 'active' ? "text-success-text" : "text-on-surface-variant"
+              )}>{formStatus}</span>
             </div>
+            
+            <button 
+              onClick={() => setIsPublishModalOpen(true)}
+              className="px-6 py-3 rounded-2xl font-bold bg-white text-primary border border-primary/20 hover:bg-primary/5 transition-all flex items-center gap-2 group text-sm shadow-sm"
+            >
+              <Share2 size={20} className="group-hover:-translate-y-0.5 transition-transform" />
+              {formStatus === 'active' ? 'Bagikan' : 'Publish'}
+            </button>
+
             <button 
               onClick={handleSave}
               disabled={isSaving}
@@ -361,7 +407,7 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
               ) : (
                 <Save size={20} className="group-hover:translate-y-[-1px] transition-transform" />
               )}
-              {isSaving ? 'Menyimpan...' : 'Simpan Form'}
+              {isSaving ? 'Menyimpan...' : 'Simpan'}
             </button>
           </div>
         </div>
@@ -501,6 +547,64 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
           </div>
         </div>
       </section>
+
+      {/* Publish Modal */}
+      <AnimatePresence>
+        {isPublishModalOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setIsPublishModalOpen(false)}
+                className="absolute top-4 right-4 p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mb-6">
+                <Share2 size={32} />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-on-surface mb-2">Publikasi Formulir</h3>
+              
+              {formStatus === 'draft' ? (
+                <>
+                  <p className="text-on-surface-variant mb-8">Formulir Anda saat ini berstatus Draft. Apakah Anda ingin mem-publish formulir ini agar bisa diisi oleh pelanggan?</p>
+                  <button 
+                    onClick={handlePublish}
+                    disabled={isPublishing}
+                    className="w-full py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-container hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2"
+                  >
+                    {isPublishing ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Publish Sekarang'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-on-surface-variant mb-6">Formulir Anda sudah aktif. Bagikan link di bawah ini kepada pelanggan Anda.</p>
+                  <div className="bg-surface-container-low rounded-xl p-2 flex items-center border border-outline-variant">
+                    <div className="p-3 text-on-surface-variant"><LinkIcon size={20} /></div>
+                    <input 
+                      readOnly
+                      value={publicUrl}
+                      className="flex-1 bg-transparent border-none text-sm text-on-surface focus:ring-0 outline-none truncate"
+                    />
+                    <button 
+                      onClick={handleCopyLink}
+                      className="ml-2 px-6 py-3 bg-white border border-outline-variant rounded-lg font-bold text-sm text-on-surface hover:border-primary hover:text-primary transition-colors shadow-sm"
+                    >
+                      Salin
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

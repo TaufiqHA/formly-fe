@@ -20,6 +20,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<ViewType | 'publicForm'>('overview');
   const [selectedFormId, setSelectedFormId] = useState<string | undefined>(undefined);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | undefined>(undefined);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [publicFormSlug, setPublicFormSlug] = useState<string | null>(null);
   const [previewFormId, setPreviewFormId] = useState<string | null>(null);
@@ -80,9 +81,24 @@ export default function App() {
       case 'overview':
         return <Dashboard />;
       case 'orders':
-        return <Submissions onSelectSubmission={() => setCurrentView('orderDetails')} />;
+        return (
+          <Submissions 
+            onSelectSubmission={(id) => {
+              setSelectedSubmissionId(id);
+              setCurrentView('orderDetails');
+            }} 
+          />
+        );
       case 'orderDetails':
-        return <SubmissionDetails onBack={() => setCurrentView('orders')} />;
+        return (
+          <SubmissionDetails 
+            submissionId={selectedSubmissionId} 
+            onBack={() => {
+              setSelectedSubmissionId(undefined);
+              setCurrentView('orders');
+            }} 
+          />
+        );
       case 'formList':
         return (
           <FormList 
@@ -125,7 +141,17 @@ export default function App() {
       case 'whatsapp':
         return <WhatsAppSettings />;
       case 'publicForm':
-        return <PublicForm slug={publicFormSlug || ''} previewId={previewFormId || undefined} />;
+        return (
+          <PublicForm 
+            slug={publicFormSlug || ''} 
+            previewId={previewFormId || undefined} 
+            onBack={() => {
+              setPreviewFormId(null);
+              setPublicFormSlug(null);
+              setCurrentView('formList');
+            }}
+          />
+        );
       default:
         return <Dashboard />;
     }
@@ -135,7 +161,17 @@ export default function App() {
 
   // Special layout for Public Form
   if (currentView === 'publicForm') {
-    return <PublicForm slug={publicFormSlug || ''} previewId={previewFormId || undefined} />;
+    return (
+      <PublicForm 
+        slug={publicFormSlug || ''} 
+        previewId={previewFormId || undefined} 
+        onBack={() => {
+          setPreviewFormId(null);
+          setPublicFormSlug(null);
+          setCurrentView('formList');
+        }} 
+      />
+    );
   }
 
   if (!isAuthenticated) {

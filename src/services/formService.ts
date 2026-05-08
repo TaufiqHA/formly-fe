@@ -31,4 +31,12 @@ export const formService = {
       body: JSON.stringify({ fields: fieldsData }),
     });
   },
+
+  // Mengubah status form (misal: dari draft ke active)
+  updateFormStatus: async (id: string, status: 'draft' | 'active') => {
+    return fetchApi(`/forms/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
 };
