@@ -24,6 +24,8 @@ export default function PublicForm({ slug, previewId, onBack }: { slug?: string,
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, any>>({});
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [successData, setSuccessData] = useState<{ submission_number?: string, wa_redirect_url?: string }>({});
@@ -88,6 +90,15 @@ export default function PublicForm({ slug, previewId, onBack }: { slug?: string,
       return;
     }
 
+    if (!customerName.trim()) {
+      alert("Kolom Nama Lengkap wajib diisi.");
+      return;
+    }
+    if (!customerPhone.trim()) {
+      alert("Kolom Nomor WhatsApp wajib diisi.");
+      return;
+    }
+
     // Validate required fields
     for (const field of formConfig.fields) {
       const val = values[field.id];
@@ -99,7 +110,12 @@ export default function PublicForm({ slug, previewId, onBack }: { slug?: string,
 
     try {
       setIsSubmitting(true);
-      const res = await publicService.submitPublicForm(slug, values);
+      const payload = {
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        values: values
+      };
+      const res = await publicService.submitPublicForm(slug, payload);
       if (res.success) {
         setIsSuccess(true);
         setSuccessData(res.data);
@@ -199,6 +215,38 @@ export default function PublicForm({ slug, previewId, onBack }: { slug?: string,
 
         <div className="px-8 py-8 relative">
           <form className="space-y-8" onSubmit={handleSubmit}>
+            
+            {/* === KODE TAMBAHAN: Field Statis Nama & WA === */}
+            <div className="space-y-6 pb-6 border-b border-outline-variant">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-on-surface">
+                  Nama Lengkap <span className="text-error">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Contoh: Budi Santoso"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-on-surface">
+                  Nomor WhatsApp <span className="text-error">*</span>
+                </label>
+                <input 
+                  type="tel" 
+                  required
+                  placeholder="Contoh: 081234567890"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline"
+                />
+              </div>
+            </div>
+            {/* === BATAS KODE TAMBAHAN === */}
+
             {formConfig.fields.map((field) => (
               <div key={field.id} className="space-y-2">
                 <label className="text-sm font-bold text-on-surface">

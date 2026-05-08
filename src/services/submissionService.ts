@@ -3,9 +3,22 @@ import { fetchApi } from '../lib/api';
 export const submissionService = {
   // 1. Mengambil daftar semua submission (dengan pagination, filter, search)
   getSubmissions: async (params?: { page?: number; limit?: number; status?: string; search?: string }) => {
-    // Membangun query string jika ada parameter yang dikirim
-    const query = params ? new URLSearchParams(params as any).toString() : '';
+    // 1. Siapkan object penampung parameter yang valid
+    const cleanParams: Record<string, string> = {};
+    
+    // 2. Filter parameter: hanya masukkan jika valuenya tidak kosong/null
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+          cleanParams[key] = String(value);
+        }
+      });
+    }
+
+    // 3. Bangun query string dari parameter yang sudah dibersihkan
+    const query = new URLSearchParams(cleanParams).toString();
     const url = query ? `/submissions?${query}` : '/submissions';
+    
     return fetchApi(url, { method: 'GET' });
   },
 

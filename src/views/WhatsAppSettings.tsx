@@ -1,17 +1,79 @@
-import React, { useState } from 'react';
-import { Save, MessageSquare, Shield, Smartphone, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Save, MessageSquare, Shield, Smartphone, RefreshCw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
+import { settingsService } from '../services/settingsService';
+import { WhatsAppConfig } from '../types/settings';
 
 export default function WhatsAppSettings() {
-  const [status, setStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connected');
-  const [apiKey, setApiKey] = useState('sk_live_wa_723849102834');
-  const [phoneNumber, setPhoneNumber] = useState('+62 812-3456-7890');
+  const [config, setConfig] = useState<WhatsAppConfig>({
+    api_key: '',
+    phone_number: '',
+    connection_status: 'disconnected',
+    wa_template_new_order: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
 
-  const handleTestConnection = () => {
-    setStatus('connecting');
-    setTimeout(() => setStatus('connected'), 1500);
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await settingsService.getSettings();
+        if (res.success) {
+          setConfig(res.data.whatsapp);
+        }
+      } catch (error) {
+        console.error("Gagal memuat WA settings", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const handleSaveConfig = async () => {
+    try {
+      setIsSubmitting(true);
+      const res = await settingsService.updateWhatsAppConfig(config);
+      if (res.success) {
+        alert(res.message || "Konfigurasi WhatsApp berhasil disimpan");
+      }
+    } catch (error: any) {
+      alert("Gagal menyimpan: " + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const handleTestConnection = async () => {
+    try {
+      setTestingConnection(true);
+      const res = await settingsService.testWhatsAppConnection();
+      if (res.success) {
+        alert("Koneksi Berhasil: " + res.message);
+        // Refresh settings to get updated status
+        const updated = await settingsService.getSettings();
+        if (updated.success) setConfig(updated.data.whatsapp);
+      } else {
+        alert("Koneksi Gagal: " + res.message);
+      }
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  const status = config.connection_status || 'disconnected';
 
   return (
     <motion.div 
@@ -27,16 +89,16 @@ export default function WhatsAppSettings() {
         <div className={cn(
           "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest",
           status === 'connected' ? "bg-success-bg text-success-text" : 
-          status === 'connecting' ? "bg-primary/10 text-primary" : "bg-error/10 text-error"
+          testingConnection || status === 'pending' ? "bg-primary/10 text-primary" : "bg-error/10 text-error"
         )}>
-          {status === 'connecting' ? (
+          {testingConnection || status === 'pending' ? (
             <RefreshCw size={14} className="animate-spin" />
           ) : status === 'connected' ? (
             <CheckCircle2 size={14} />
           ) : (
             <AlertCircle size={14} />
           )}
-          {status === 'connected' ? 'Terhubung' : status === 'connecting' ? 'Menghubungkan...' : 'Terputus'}
+          {status === 'connected' ? 'Terhubung' : testingConnection || status === 'pending' ? 'Menghubungkan...' : 'Terputus'}
         </div>
       </div>
 
@@ -59,13 +121,11 @@ export default function WhatsAppSettings() {
               <div className="relative">
                 <input 
                   type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
+                  value={config.api_key || ''}
+                  onChange={(e) => setConfig({ ...config, api_key: e.target.value })}
+                  placeholder="Masukkan API Key Anda"
                   className="w-full pl-4 pr-12 py-3 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono"
                 />
-                <button className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-primary hover:underline uppercase tracking-widest">
-                  Reveal
-                </button>
               </div>
             </div>
 
@@ -76,16 +136,18 @@ export default function WhatsAppSettings() {
                   <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
                   <input 
                     type="text"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    value={config.phone_number}
+                    onChange={(e) => setConfig({ ...config, phone_number: e.target.value })}
+                    placeholder="+62 8xx-xxxx-xxxx"
                     className="w-full pl-12 pr-4 py-3 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                 </div>
                 <button 
                   onClick={handleTestConnection}
-                  className="px-6 py-3 border border-outline-variant rounded-xl text-sm font-bold text-on-surface hover:bg-surface-container transition-all flex items-center gap-2 whitespace-nowrap"
+                  disabled={testingConnection}
+                  className="px-6 py-3 border border-outline-variant rounded-xl text-sm font-bold text-on-surface hover:bg-surface-container transition-all flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
                 >
-                  <RefreshCw size={16} className={cn(status === 'connecting' && "animate-spin")} />
+                  <RefreshCw size={16} className={cn(testingConnection && "animate-spin")} />
                   Tes Koneksi
                 </button>
               </div>
@@ -111,11 +173,17 @@ export default function WhatsAppSettings() {
               <textarea 
                 rows={4}
                 className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-on-surface resize-none"
-                defaultValue="Halo {nama}, terima kasih telah melakukan pemesanan di Formly! Kami telah menerima pesanan Anda dengan nomor #ORD-{id}. Mohon tunggu konfirmasi selanjutnya."
+                value={config.wa_template_new_order}
+                onChange={(e) => setConfig({ ...config, wa_template_new_order: e.target.value })}
+                placeholder="Halo {nama}, terima kasih telah melakukan pemesanan..."
               />
               <div className="mt-4 flex gap-2 flex-wrap">
                 {['{nama}', '{id}', '{total}', '{tanggal}'].map(tag => (
-                  <button key={tag} className="px-2 py-1 bg-white border border-outline-variant rounded text-[10px] font-mono text-on-surface-variant hover:border-primary hover:text-primary transition-all">
+                  <button 
+                    key={tag} 
+                    onClick={() => setConfig({ ...config, wa_template_new_order: config.wa_template_new_order + tag })}
+                    className="px-2 py-1 bg-white border border-outline-variant rounded text-[10px] font-mono text-on-surface-variant hover:border-primary hover:text-primary transition-all"
+                  >
                     {tag}
                   </button>
                 ))}
@@ -126,8 +194,12 @@ export default function WhatsAppSettings() {
       </div>
 
       <div className="flex justify-end pt-4">
-        <button className="bg-primary text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-container transition-all shadow-lg active:scale-95">
-          <Save size={20} />
+        <button 
+          onClick={handleSaveConfig}
+          disabled={isSubmitting}
+          className="bg-primary text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-container transition-all shadow-lg active:scale-95 disabled:opacity-70"
+        >
+          {isSubmitting ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
           Simpan Konfigurasi
         </button>
       </div>

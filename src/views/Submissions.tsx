@@ -110,6 +110,7 @@ export default function Submissions({ onSelectSubmission }: { onSelectSubmission
                   <th className="py-4 px-6 text-xs font-bold text-on-surface-variant uppercase tracking-widest">No. Order</th>
                   <th className="py-4 px-6 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-center">Waktu</th>
                   <th className="py-4 px-6 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-center">Pengirim</th>
+                  <th className="py-4 px-6 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-center">WhatsApp</th>
                   <th className="py-4 px-6 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-center">Nama Form</th>
                   <th className="py-4 px-6 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-center">Status</th>
                   <th className="py-4 px-6 text-xs font-bold text-on-surface-variant uppercase tracking-widest text-right">Aksi</th>
@@ -126,7 +127,12 @@ export default function Submissions({ onSelectSubmission }: { onSelectSubmission
                       <td className="py-4 px-6 whitespace-nowrap text-on-surface-variant text-center">
                         {new Date(submission.submitted_at).toLocaleString('id-ID')}
                       </td>
-                      <td className="py-4 px-6 whitespace-nowrap text-center">{submission.customer_name || '-'}</td>
+                      <td className="py-4 px-6 whitespace-nowrap text-center">
+                        {submission.customer_name || submission.name || '-'}
+                      </td>
+                      <td className="py-4 px-6 whitespace-nowrap text-center">
+                        {submission.customer_phone || submission.phone || submission.whatsapp || '-'}
+                      </td>
                       <td className="py-4 px-6 whitespace-nowrap text-center">{submission.form_title || '-'}</td>
                       <td className="py-4 px-6 whitespace-nowrap text-center">
                         <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-bold", style.color)}>
