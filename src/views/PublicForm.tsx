@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Send, CheckCircle, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { publicService } from '../services/publicService';
 import { formService } from '../services/formService';
@@ -19,7 +19,7 @@ interface FormConfig {
   fields: Field[];
 }
 
-export default function PublicForm({ slug, previewId }: { slug?: string, previewId?: string }) {
+export default function PublicForm({ slug, previewId, onBack }: { slug?: string, previewId?: string, onBack?: () => void }) {
   const [formConfig, setFormConfig] = useState<FormConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,9 +83,15 @@ export default function PublicForm({ slug, previewId }: { slug?: string, preview
       return;
     }
 
+    if (!slug) {
+      alert("Slug form tidak ditemukan.");
+      return;
+    }
+
     // Validate required fields
     for (const field of formConfig.fields) {
-      if (field.is_required && (!values[field.id] || values[field.id].length === 0)) {
+      const val = values[field.id];
+      if (field.is_required && (!val || (Array.isArray(val) && val.length === 0))) {
         alert(`Kolom "${field.label}" wajib diisi.`);
         return;
       }
@@ -172,6 +178,17 @@ export default function PublicForm({ slug, previewId }: { slug?: string, preview
         className="w-full max-w-2xl bg-white border border-outline-variant rounded-3xl shadow-2xl overflow-hidden"
       >
         <div className="px-8 py-10 relative bg-primary/5 border-b border-outline-variant">
+          {previewId && onBack && (
+            <button 
+              onClick={onBack}
+              type="button"
+              className="mb-6 flex items-center gap-2 text-sm font-bold text-primary bg-white px-4 py-2 rounded-full border border-primary/20 hover:bg-primary/10 transition-colors shadow-sm w-fit group"
+            >
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+              Kembali ke Dashboard
+            </button>
+          )}
+          
           <h1 className="text-3xl font-bold text-on-surface tracking-tight mb-2">{formConfig.title}</h1>
           {formConfig.description && (
             <p className="text-on-surface-variant leading-relaxed">
@@ -188,9 +205,10 @@ export default function PublicForm({ slug, previewId }: { slug?: string, preview
                   {field.label} {field.is_required && <span className="text-error">*</span>}
                 </label>
                 
-                {field.field_type === 'text' && (
+                {/* Teks Pendek / Email / Telepon */}
+                {['text', 'email', 'phone'].includes(field.field_type) && (
                   <input 
-                    type="text" 
+                    type={field.field_type === 'email' ? 'email' : field.field_type === 'phone' ? 'tel' : 'text'} 
                     required={field.is_required}
                     value={values[field.id] || ''}
                     onChange={(e) => handleChange(field.id, e.target.value)}
@@ -198,7 +216,8 @@ export default function PublicForm({ slug, previewId }: { slug?: string, preview
                   />
                 )}
 
-                {field.field_type === 'textarea' && (
+                {/* Paragraf / Alamat */}
+                {['para', 'address'].includes(field.field_type) && (
                   <textarea 
                     required={field.is_required}
                     rows={3}
@@ -208,6 +227,7 @@ export default function PublicForm({ slug, previewId }: { slug?: string, preview
                   />
                 )}
 
+                {/* Radio Button */}
                 {field.field_type === 'radio' && field.options && (
                   <div className="space-y-2">
                     {field.options.map((opt) => (
@@ -227,7 +247,8 @@ export default function PublicForm({ slug, previewId }: { slug?: string, preview
                   </div>
                 )}
 
-                {field.field_type === 'checkbox' && field.options && (
+                {/* Checkbox */}
+                {field.field_type === 'check' && field.options && (
                   <div className="space-y-2">
                     {field.options.map((opt) => {
                       const isChecked = (values[field.id] || []).includes(opt);
@@ -247,7 +268,8 @@ export default function PublicForm({ slug, previewId }: { slug?: string, preview
                   </div>
                 )}
                 
-                {field.field_type === 'select' && field.options && (
+                {/* Dropdown */}
+                {field.field_type === 'drop' && field.options && (
                   <select
                     required={field.is_required}
                     value={values[field.id] || ''}
