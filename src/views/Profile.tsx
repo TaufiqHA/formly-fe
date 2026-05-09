@@ -1,12 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Mail, Phone, MapPin, Building, Calendar, Edit3, Loader2 } from 'lucide-react';
+import { Camera, Mail, Phone, MapPin, Building, Calendar, Edit3, Loader2, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { authService } from '../services/authService';
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Form states
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    location: ''
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -14,6 +25,14 @@ export default function Profile() {
         const response = await authService.getMe();
         if (response.success) {
           setUser(response.data);
+          setFormData({
+            name: response.data.name || '',
+            email: response.data.email || '',
+            phone: response.data.phone || '',
+            location: response.data.location || ''
+          });
+          // Update localStorage if needed
+          localStorage.setItem('user_data', JSON.stringify(response.data));
         } else {
           setError('Gagal memuat profil');
         }
@@ -26,6 +45,27 @@ export default function Profile() {
 
     fetchProfile();
   }, []);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const response = await authService.updateProfile(formData);
+      if (response.success) {
+        setUser(response.data);
+        localStorage.setItem('user_data', JSON.stringify(response.data));
+        setSuccessMessage('Profil berhasil diperbarui!');
+        setIsEditing(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Gagal memperbarui profil');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Format tanggal menjadi bahasa Indonesia (contoh: 1 Januari 2023)
   const formatDate = (dateString?: string) => {
@@ -45,7 +85,7 @@ export default function Profile() {
     );
   }
 
-  if (error) {
+  if (error && !isEditing) {
     return (
       <div className="flex flex-col items-center justify-center h-full pb-12 gap-4">
         <p className="text-error font-medium">{error}</p>
@@ -68,6 +108,17 @@ export default function Profile() {
       animate={{ opacity: 1, y: 0 }}
       className="max-w-4xl mx-auto space-y-8 pb-12"
     >
+      {successMessage && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-success-container/20 border border-success-text/20 p-4 rounded-2xl flex items-center gap-3 text-success-text font-medium"
+        >
+          <CheckCircle2 size={20} />
+          {successMessage}
+        </motion.div>
+      )}
+
       {/* Header Profile */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl overflow-hidden shadow-sm">
         <div className="h-48 bg-primary relative">
@@ -94,41 +145,125 @@ export default function Profile() {
               Aktif
             </p>
           </div>
-          <button className="bg-secondary-container text-primary px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-primary/10 transition-colors border border-primary/20">
-            <Edit3 size={18} />
-            Edit Profil
-          </button>
+          {!isEditing && (
+            <button 
+              onClick={() => setIsEditing(true)}
+              className="bg-secondary-container text-primary px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-primary/10 transition-colors border border-primary/20"
+            >
+              <Edit3 size={18} />
+              Edit Profil
+            </button>
+          )}
         </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
-        {/* Info Kontak */}
+        {/* Info Kontak / Form Edit */}
         <div className="md:col-span-2 space-y-6">
           <div className="bg-surface-container-lowest p-8 rounded-2xl border border-outline-variant shadow-sm h-full">
-            <h2 className="font-bold text-lg text-on-surface mb-6">Informasi Pribadi</h2>
-            <div className="grid sm:grid-cols-2 gap-8">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Email</label>
-                <div className="flex items-center gap-3 text-on-surface">
-                  <Mail size={18} className="text-primary" />
-                  <span className="font-medium">{user?.email || '-'}</span>
+            <h2 className="font-bold text-lg text-on-surface mb-6">
+              {isEditing ? 'Edit Informasi Pribadi' : 'Informasi Pribadi'}
+            </h2>
+
+            {isEditing ? (
+              <form onSubmit={handleUpdateProfile} className="space-y-6">
+                {error && (
+                  <div className="p-3 bg-error/10 border border-error/20 rounded-xl text-error text-xs font-medium">
+                    {error}
+                  </div>
+                )}
+                
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Nama Lengkap</label>
+                    <input 
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Email</label>
+                    <input 
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      required
+                      className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Telepon</label>
+                    <input 
+                      type="text"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Lokasi Kantor</label>
+                    <input 
+                      type="text"
+                      value={formData.location}
+                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    type="submit"
+                    disabled={isSaving}
+                    className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-primary-container transition-all shadow-md disabled:opacity-70"
+                  >
+                    {isSaving ? <Loader2 className="animate-spin" size={18} /> : 'Simpan Perubahan'}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setFormData({
+                        name: user?.name || '',
+                        email: user?.email || '',
+                        phone: user?.phone || '',
+                        location: user?.location || ''
+                      });
+                    }}
+                    className="bg-surface text-on-surface-variant px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-surface-container-high transition-colors border border-outline-variant"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-8">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Email</label>
+                  <div className="flex items-center gap-3 text-on-surface">
+                    <Mail size={18} className="text-primary" />
+                    <span className="font-medium">{user?.email || '-'}</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Telepon</label>
+                  <div className="flex items-center gap-3 text-on-surface">
+                    <Phone size={18} className="text-primary" />
+                    <span className="font-medium">{user?.phone || '-'}</span>
+                  </div>
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Lokasi Kantor</label>
+                  <div className="flex items-center gap-3 text-on-surface">
+                    <MapPin size={18} className="text-primary" />
+                    <span className="font-medium">{user?.location || '-'}</span>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Telepon</label>
-                <div className="flex items-center gap-3 text-on-surface">
-                  <Phone size={18} className="text-primary" />
-                  <span className="font-medium">{user?.phone || '-'}</span>
-                </div>
-              </div>
-              <div className="space-y-1 sm:col-span-2">
-                <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Lokasi Kantor</label>
-                <div className="flex items-center gap-3 text-on-surface">
-                  <MapPin size={18} className="text-primary" />
-                  <span className="font-medium">{user?.location || '-'}</span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

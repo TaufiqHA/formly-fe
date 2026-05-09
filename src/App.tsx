@@ -12,12 +12,15 @@ import Settings from './views/Settings';
 import Profile from './views/Profile';
 import WhatsAppSettings from './views/WhatsAppSettings';
 import Login from './views/Login';
+import Register from './views/Register';
 import { authService } from './services/authService';
 import { formService } from './services/formService';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [currentView, setCurrentView] = useState<ViewType | 'publicForm'>('overview');
   const [selectedFormId, setSelectedFormId] = useState<string | undefined>(undefined);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | undefined>(undefined);
@@ -42,12 +45,13 @@ export default function App() {
       const token = localStorage.getItem('auth_token');
       if (token) {
         try {
-          // Opsional: Validasi token ke backend
-          await authService.getMe();
-          setIsAuthenticated(true);
+          const response = await authService.getMe();
+          if (response.success) {
+            setUser(response.data);
+            setIsAuthenticated(true);
+          }
         } catch (error) {
-          // Token tidak valid/expired
-          localStorage.removeItem('auth_token');
+          localStorage.clear();
           setIsAuthenticated(false);
         }
       }
@@ -55,12 +59,6 @@ export default function App() {
     };
 
     checkAuth();
-
-    // Event listener jika token expired (dipanggil dari lib/api.ts)
-    const handleExpired = () => setIsAuthenticated(false);
-    window.addEventListener('auth-expired', handleExpired);
-    
-    return () => window.removeEventListener('auth-expired', handleExpired);
   }, []);
 
   const handleLogout = async () => {
@@ -69,10 +67,18 @@ export default function App() {
     } catch (error) {
       console.error(error);
     } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
+      localStorage.clear(); // Hapus semua data dari localStorage
       setIsAuthenticated(false);
+      setUser(null);
+      
+      // Reset semua state navigasi dan data
       setCurrentView('overview');
+      setSelectedFormId(undefined);
+      setSelectedSubmissionId(undefined);
+      setIsMobileMenuOpen(false);
+      setPublicFormSlug(null);
+      setPreviewFormId(null);
+      setAuthView('login');
     }
   };
 
@@ -175,7 +181,23 @@ export default function App() {
   }
 
   if (!isAuthenticated) {
-    return <Login onLogin={() => setIsAuthenticated(true)} />;
+    return authView === 'login' ? (
+      <Login 
+        onLogin={(userData) => {
+          setUser(userData);
+          setIsAuthenticated(true);
+        }} 
+        onNavigateRegister={() => setAuthView('register')}
+      />
+    ) : (
+      <Register 
+        onLogin={(userData) => {
+          setUser(userData);
+          setIsAuthenticated(true);
+        }} 
+        onNavigateLogin={() => setAuthView('login')}
+      />
+    );
   }
 
   return (
@@ -195,6 +217,7 @@ export default function App() {
           currentView={currentView} 
           onViewChange={setCurrentView} 
           onMenuClick={() => setIsMobileMenuOpen(true)}
+          user={user}
         />
         <main className={cn(
           "flex-1",
