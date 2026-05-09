@@ -75,10 +75,15 @@ export default function Sidebar({ currentView, onViewChange, onLogout, isOpen, o
 
         <div className="px-6 mt-auto pb-8 space-y-4">
           <div className="border-t border-outline-variant pt-4 space-y-1">
-            <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
+            <a 
+              href="https://wa.me/6281234567890" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors"
+            >
               <HelpCircle size={20} />
               Help Center
-            </button>
+            </a>
             <button 
               onClick={onLogout}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors"

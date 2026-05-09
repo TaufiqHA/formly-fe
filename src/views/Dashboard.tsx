@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ClipboardList, Layers, TrendingUp, MoreVertical, ArrowRight, Loader2, PieChart as PieChartIcon } from 'lucide-react';
 import { motion } from 'motion/react';
+import { ViewType } from '../components/Sidebar';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { analyticsService } from '../services/analyticsService';
 import { submissionService } from '../services/submissionService';
@@ -19,7 +20,11 @@ const itemVariants = {
   visible: { y: 0, opacity: 1 }
 };
 
-export default function Dashboard() {
+interface DashboardProps {
+  onViewChange: (view: ViewType) => void;
+}
+
+export default function Dashboard({ onViewChange }: DashboardProps) {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [trendData, setTrendData] = useState<AnalyticsTrend[]>([]);
   const [statusData, setStatusData] = useState<AnalyticsStatusDistribution[]>([]);
@@ -91,7 +96,7 @@ export default function Dashboard() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-8 pb-20"
     >
       <div>
         <h1 className="text-2xl sm:text-4xl font-bold text-on-surface">Ringkasan Dashboard</h1>
@@ -200,7 +205,10 @@ export default function Dashboard() {
       <motion.div variants={itemVariants} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
         <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
           <h2 className="text-xl font-bold text-on-surface">Respon Terbaru</h2>
-          <button className="text-primary font-semibold text-sm hover:underline flex items-center gap-1">
+          <button 
+            onClick={() => onViewChange('orders')}
+            className="text-primary font-semibold text-sm hover:underline flex items-center gap-1"
+          >
             Lihat Semua
             <ArrowRight size={16} />
           </button>

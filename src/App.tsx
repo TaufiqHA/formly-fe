@@ -85,7 +85,7 @@ export default function App() {
   const renderView = () => {
     switch (currentView) {
       case 'overview':
-        return <Dashboard />;
+        return <Dashboard onViewChange={setCurrentView} />;
       case 'orders':
         return (
           <Submissions 
@@ -159,7 +159,7 @@ export default function App() {
           />
         );
       default:
-        return <Dashboard />;
+        return <Dashboard onViewChange={setCurrentView} />;
     }
   };
 
