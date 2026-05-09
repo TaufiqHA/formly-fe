@@ -51,8 +51,30 @@ export const submissionService = {
   },
 
   // 6. Export/Download Data CSV/Excel
-  exportSubmissions: async () => {
-    // Digunakan untuk mendownload file, membutuhkan penanganan fetch khusus atau menggunakan blob
-    return fetchApi('/submissions/export', { method: 'GET' });
+  exportSubmissions: async (formId?: string) => {
+    const token = localStorage.getItem('auth_token');
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+    const url = formId ? `/submissions/export?form_id=${formId}` : '/submissions/export';
+    
+    const response = await fetch(`${baseUrl}${url}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Gagal mengekspor data');
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', `submissions-${new Date().toISOString().split('T')[0]}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
   }
 };
