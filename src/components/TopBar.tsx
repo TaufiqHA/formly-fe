@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, Settings, FileText, CheckCircle2, Menu, LayoutDashboard } from 'lucide-react';
+import { Bell, Settings, FileText, CheckCircle2, Menu, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ViewType } from './Sidebar';
 import { cn } from '../lib/utils';
@@ -95,14 +95,6 @@ export default function TopBar({ currentView, onViewChange, onMenuClick, onSelec
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={18} />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-64 transition-all"
-          />
-        </div>
         
         <div className="flex items-center gap-1">
           <div className="relative" ref={notificationRef}>

@@ -72,7 +72,7 @@ export default function Settings() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto space-y-8 relative"
+      className="max-w-4xl mx-auto space-y-8 relative pb-20"
     >
       <AnimatePresence>
         {toast && (

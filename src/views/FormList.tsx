@@ -113,7 +113,7 @@ export default function FormList({ onCreateNew, onEdit, onPreview }: FormListPro
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-8"
+      className="space-y-8 pb-20"
     >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
