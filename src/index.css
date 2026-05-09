@@ -31,8 +31,39 @@
   --color-process-bg: #fef08a;
   --color-process-text: #854d0e;
   
+  --color-error: #ba1a1a;
+  --color-error-bg: #ffdad6;
+  --color-error-text: #410002;
+  
   --radius-xl: 1.5rem;
   --radius-lg: 1rem;
+}
+
+.dark {
+  --color-surface: #0e1419;
+  --color-surface-dim: #0e1419;
+  --color-surface-bright: #1b2329;
+  --color-surface-container-lowest: #0e1419;
+  --color-surface-container-low: #1b2329;
+  --color-surface-container: #212a31;
+  --color-surface-container-high: #283138;
+  --color-surface-container-highest: #2f3840;
+  --color-on-surface: #e1e2e5;
+  --color-on-surface-variant: #c3c6d5;
+  --color-outline: #8d919f;
+  --color-outline-variant: #43474e;
+  
+  --color-primary: #a8c8ff;
+  --color-primary-container: #00458e;
+  --color-on-primary: #003062;
+  
+  --color-secondary: #bec6dc;
+  --color-secondary-container: #3f4759;
+  --color-on-secondary-container: #d9e2ff;
+  
+  --color-tertiary: #b0ccf0;
+  --color-success-bg: #064e3b;
+  --color-success-text: #6ee7b7;
 }
 
 @layer utilities {

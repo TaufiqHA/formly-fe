@@ -217,6 +217,10 @@ export default function App() {
           currentView={currentView} 
           onViewChange={setCurrentView} 
           onMenuClick={() => setIsMobileMenuOpen(true)}
+          onSelectSubmission={(id) => {
+            setSelectedSubmissionId(id);
+            setCurrentView('orderDetails');
+          }}
           user={user}
         />
         <main className={cn(

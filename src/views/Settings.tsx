@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Save, Bell, Shield, Palette, Loader2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Save, Bell, Shield, Palette, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { settingsService } from '../services/settingsService';
 import { Preferences } from '../types/settings';
 
@@ -12,6 +12,7 @@ export default function Settings() {
   });
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -19,6 +20,8 @@ export default function Settings() {
         const res = await settingsService.getSettings();
         if (res.success) {
           setPreferences(res.data.preferences);
+          // Apply theme on load
+          applyTheme(res.data.preferences.theme);
         }
       } catch (error) {
         console.error("Gagal memuat settings", error);
@@ -29,15 +32,29 @@ export default function Settings() {
     loadSettings();
   }, []);
 
+  const applyTheme = (theme: 'light' | 'dark') => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleSave = async () => {
     try {
       setIsSubmitting(true);
       const res = await settingsService.updatePreferences(preferences);
       if (res.success) {
-        alert(res.message || "Pengaturan berhasil disimpan");
+        showToast(res.message || "Pengaturan berhasil disimpan", 'success');
+        applyTheme(preferences.theme);
       }
     } catch (error: any) {
-      alert("Gagal menyimpan: " + error.message);
+      showToast("Gagal menyimpan: " + error.message, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -55,8 +72,26 @@ export default function Settings() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto space-y-8"
+      className="max-w-4xl mx-auto space-y-8 relative"
     >
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-24 right-6 z-50 flex items-center gap-3 px-6 py-3 rounded-xl shadow-lg border ${
+              toast.type === 'success' 
+                ? 'bg-success-bg border-success-text text-success-text' 
+                : 'bg-error-bg border-error-text text-error-text'
+            }`}
+          >
+            {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+            <span className="font-bold text-sm">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div>
         <h1 className="text-3xl font-bold text-on-surface">Pengaturan</h1>
         <p className="text-on-surface-variant mt-1">Kelola preferensi akun dan aplikasi Anda.</p>
