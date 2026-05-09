@@ -201,7 +201,13 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
     setIsSaving(true);
     
     try {
-      // 1. Format state lokal (FormElement) ke struktur Request API
+      // 1. Simpan Judul dan Deskripsi Form
+      await formService.updateForm(formId, {
+        title: formTitle,
+        description: formDescription
+      });
+
+      // 2. Format state lokal (FormElement) ke struktur Request API
       const formattedFields = formElements.map((el, index) => {
         // Cek apakah ID asalnya dari Date.now() (berarti field baru).
         // Jika ya, we do not send the id to backend so it's treated as a new field.
@@ -218,7 +224,7 @@ export default function FormBuilder({ formId, onBack }: FormBuilderProps) {
         };
       });
 
-      // 2. Tembak API backend
+      // 3. Tembak API backend untuk update field
       const response = await formService.updateFormFields(formId, formattedFields);
       
       if (response.success) {

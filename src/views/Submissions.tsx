@@ -57,7 +57,7 @@ export default function Submissions({ onSelectSubmission }: { onSelectSubmission
         status: params.status,
         search: debouncedSearch,
         form_id: params.formId
-      } as any);
+      });
       if (res.success) {
         // API returns { items: [], pagination: {} }
         setSubmissions(res.data.items || []);

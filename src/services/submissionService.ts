@@ -2,7 +2,7 @@ import { fetchApi } from '../lib/api';
 
 export const submissionService = {
   // 1. Mengambil daftar semua submission (dengan pagination, filter, search)
-  getSubmissions: async (params?: { page?: number; limit?: number; status?: string; search?: string }) => {
+  getSubmissions: async (params?: { page?: number; limit?: number; status?: string; search?: string; form_id?: string }) => {
     // 1. Siapkan object penampung parameter yang valid
     const cleanParams: Record<string, string> = {};
     

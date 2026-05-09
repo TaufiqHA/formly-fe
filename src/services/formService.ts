@@ -26,6 +26,14 @@ export const formService = {
     return fetchApi(`/forms/${id}`, { method: 'GET' });
   },
 
+  // Mengupdate detail utama form (seperti judul dan deskripsi)
+  updateForm: async (id: string, data: { title: string; description?: string }) => {
+    return fetchApi(`/forms/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
   // Membuat form baru
   createForm: async (data: { title: string; description?: string }) => {
     return fetchApi('/forms', {
