@@ -22,6 +22,7 @@ export interface Submission {
   form_title?: string;
   status: 'new' | 'read' | 'done' | string;
   submitted_at: string;
+  data?: Record<string, any>;
   values?: SubmissionValue[];
   notes?: SubmissionNote[];
 }

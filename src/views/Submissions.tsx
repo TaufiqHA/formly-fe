@@ -3,27 +3,61 @@ import { Search, Filter, Download as DownloadIcon, ChevronLeft, ChevronRight, Ey
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 import { submissionService } from '../services/submissionService';
+import { formService } from '../services/formService';
 import { Submission } from '../types/submission';
 
 export default function Submissions({ onSelectSubmission }: { onSelectSubmission: (id: string) => void }) {
+  const [isExporting, setIsExporting] = useState(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [forms, setForms] = useState<{ id: string, title: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
   const [params, setParams] = useState({
     page: 1,
     limit: 10,
     status: '',
-    search: ''
+    search: '',
+    formId: ''
   });
+
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    loadForms();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(params.search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [params.search]);
 
   useEffect(() => {
     loadSubmissions();
-  }, [params]);
+  }, [params.page, params.limit, params.status, params.formId, debouncedSearch]);
+
+  const loadForms = async () => {
+    try {
+      const res = await formService.getForms();
+      if (res.success) {
+        setForms(res.data);
+      }
+    } catch (error) {
+      console.error("Gagal memuat daftar form:", error);
+    }
+  };
 
   const loadSubmissions = async () => {
     setLoading(true);
     try {
-      const res = await submissionService.getSubmissions(params);
+      const res = await submissionService.getSubmissions({
+        page: params.page,
+        limit: params.limit,
+        status: params.status,
+        search: debouncedSearch,
+        form_id: params.formId
+      } as any);
       if (res.success) {
         // API returns { items: [], pagination: {} }
         setSubmissions(res.data.items || []);
@@ -35,6 +69,18 @@ export default function Submissions({ onSelectSubmission }: { onSelectSubmission
       console.error("Gagal memuat submissions:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await submissionService.exportSubmissions(params.formId);
+    } catch (error) {
+      console.error("Gagal export:", error);
+      alert("Gagal mengekspor data");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -75,6 +121,16 @@ export default function Submissions({ onSelectSubmission }: { onSelectSubmission
             </div>
             <select 
               className="px-3 py-2 border border-outline-variant rounded-lg bg-surface text-sm focus:ring-1 focus:ring-primary outline-none min-w-[160px]"
+              value={params.formId}
+              onChange={(e) => setParams({ ...params, formId: e.target.value, page: 1 })}
+            >
+              <option value="">Semua Formulir</option>
+              {forms.map(form => (
+                <option key={form.id} value={form.id}>{form.title}</option>
+              ))}
+            </select>
+            <select 
+              className="px-3 py-2 border border-outline-variant rounded-lg bg-surface text-sm focus:ring-1 focus:ring-primary outline-none min-w-[160px]"
               value={params.status}
               onChange={(e) => setParams({ ...params, status: e.target.value, page: 1 })}
             >
@@ -85,11 +141,16 @@ export default function Submissions({ onSelectSubmission }: { onSelectSubmission
             </select>
           </div>
           <button 
-            onClick={() => submissionService.exportSubmissions()}
-            className="flex items-center gap-2 bg-surface text-secondary border border-outline-variant px-4 py-2 rounded-lg font-bold text-sm hover:bg-surface-container-low transition-colors shadow-sm"
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex items-center gap-2 bg-surface text-secondary border border-outline-variant px-4 py-2 rounded-lg font-bold text-sm hover:bg-surface-container-low transition-colors shadow-sm disabled:opacity-50"
           >
-            <DownloadIcon size={18} />
-            Export
+            {isExporting ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              <DownloadIcon size={18} />
+            )}
+            {isExporting ? 'Exporting...' : 'Export'}
           </button>
         </div>
 
@@ -131,7 +192,16 @@ export default function Submissions({ onSelectSubmission }: { onSelectSubmission
                         {submission.customer_name || submission.name || '-'}
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap text-center">
-                        {submission.customer_phone || submission.phone || submission.whatsapp || '-'}
+                        {submission.customer_phone || submission.phone || submission.whatsapp ? (
+                          <a 
+                            href={`https://wa.me/${(submission.customer_phone || submission.phone || submission.whatsapp || '').replace(/[^0-9]/g, '')}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline font-medium"
+                          >
+                            {submission.customer_phone || submission.phone || submission.whatsapp}
+                          </a>
+                        ) : '-'}
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap text-center">{submission.form_title || '-'}</td>
                       <td className="py-4 px-6 whitespace-nowrap text-center">

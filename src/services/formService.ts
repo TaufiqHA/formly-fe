@@ -2,8 +2,18 @@ import { fetchApi } from '../lib/api';
 
 export const formService = {
   // Mengambil daftar semua form
-  getForms: async () => {
-    return fetchApi('/forms', { method: 'GET' });
+  getForms: async (params?: { status?: string; search?: string }) => {
+    const cleanParams: Record<string, string> = {};
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+          cleanParams[key] = String(value);
+        }
+      });
+    }
+    const query = new URLSearchParams(cleanParams).toString();
+    const url = query ? `/forms?${query}` : '/forms';
+    return fetchApi(url, { method: 'GET' });
   },
 
   // Menghapus form berdasarkan ID

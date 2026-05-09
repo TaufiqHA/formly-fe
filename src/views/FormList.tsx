@@ -23,15 +23,30 @@ export default function FormList({ onCreateNew, onEdit, onPreview }: FormListPro
   const [forms, setForms] = useState<FormItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [params, setParams] = useState({
+    status: '',
+    search: ''
+  });
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(params.search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [params.search]);
 
   useEffect(() => {
     fetchForms();
-  }, []);
+  }, [params.status, debouncedSearch]);
 
   const fetchForms = async () => {
     setIsLoading(true);
     try {
-      const response = await formService.getForms();
+      const response = await formService.getForms({
+        status: params.status,
+        search: debouncedSearch
+      });
       if (response.success) {
         setForms(response.data);
       }
@@ -121,13 +136,19 @@ export default function FormList({ onCreateNew, onEdit, onPreview }: FormListPro
             type="text" 
             placeholder="Cari judul formulir..." 
             className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+            value={params.search}
+            onChange={(e) => setParams({ ...params, search: e.target.value })}
           />
         </div>
         <div className="flex gap-2">
-           <select className="px-4 py-2.5 border border-outline-variant rounded-xl bg-surface text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20">
-             <option>Semua Status</option>
-             <option>Aktif</option>
-             <option>Draft</option>
+           <select 
+             className="px-4 py-2.5 border border-outline-variant rounded-xl bg-surface text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20"
+             value={params.status}
+             onChange={(e) => setParams({ ...params, status: e.target.value })}
+           >
+             <option value="">Semua Status</option>
+             <option value="active">Aktif</option>
+             <option value="draft">Draft</option>
            </select>
         </div>
       </div>
