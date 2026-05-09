@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Mail, Lock, ChevronRight, LayoutDashboard, AlertCircle } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { Mail, Lock, ChevronRight, LayoutDashboard, AlertCircle, User, CheckCircle2 } from 'lucide-react';
 import { authService } from '../services/authService';
 
-interface LoginProps {
+interface RegisterProps {
   onLogin: (user: any) => void;
-  onNavigateRegister: () => void;
+  onNavigateLogin: () => void;
 }
 
-export default function Login({ onLogin, onNavigateRegister }: LoginProps) {
-  const [email, setEmail] = useState('admin@formly.app');
-  const [password, setPassword] = useState('password123');
+export default function Register({ onLogin, onNavigateLogin }: RegisterProps) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -20,18 +21,30 @@ export default function Login({ onLogin, onNavigateRegister }: LoginProps) {
     setIsLoading(true);
     setError('');
 
+    if (password !== passwordConfirmation) {
+      setError('Konfirmasi kata sandi tidak cocok.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await authService.login(email, password);
+      const response = await authService.register({ 
+        name, 
+        email, 
+        password, 
+        password_confirmation: passwordConfirmation 
+      });
+      
       if (response.success) {
         // 1. Simpan token ke localStorage
         localStorage.setItem('auth_token', response.data.token);
-        // 2. Simpan data user opsional
+        // 2. Simpan data user
         localStorage.setItem('user_data', JSON.stringify(response.data.user));
         // 3. Trigger props onLogin
         onLogin(response.data.user);
       }
     } catch (err: any) {
-      setError(err.message || 'Email atau kata sandi salah. Silakan coba lagi.');
+      setError(err.message || 'Gagal mendaftar. Silakan coba lagi.');
     } finally {
       setIsLoading(false);
     }
@@ -49,15 +62,15 @@ export default function Login({ onLogin, onNavigateRegister }: LoginProps) {
         className="w-full max-w-md"
       >
         <div className="bg-surface-container-lowest border border-outline-variant rounded-3xl p-8 shadow-xl relative z-10">
-          <div className="flex flex-col items-center text-center mb-10">
+          <div className="flex flex-col items-center text-center mb-8">
             <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg mb-4">
               <LayoutDashboard size={32} />
             </div>
-            <h1 className="text-3xl font-bold text-on-surface tracking-tight">Formly</h1>
-            <p className="text-on-surface-variant mt-2">Kelola pesanan Anda dengan lebih efisien.</p>
+            <h1 className="text-3xl font-bold text-on-surface tracking-tight">Daftar Formly</h1>
+            <p className="text-on-surface-variant mt-2">Buat akun untuk mulai mengelola pesanan.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <motion.div 
                 initial={{ opacity: 0, x: -10 }}
@@ -70,6 +83,21 @@ export default function Login({ onLogin, onNavigateRegister }: LoginProps) {
             )}
 
             <div className="space-y-4">
+              <div className="grid gap-2">
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Nama Lengkap</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
+                  <input 
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                    placeholder="Nama Anda"
+                  />
+                </div>
+              </div>
+
               <div className="grid gap-2">
                 <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Alamat Email</label>
                 <div className="relative">
@@ -86,16 +114,28 @@ export default function Login({ onLogin, onNavigateRegister }: LoginProps) {
               </div>
 
               <div className="grid gap-2">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest leading-none">Kata Sandi</label>
-                  <button type="button" className="text-[10px] font-bold text-primary hover:underline uppercase tracking-widest">Lupa Password?</button>
-                </div>
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Kata Sandi</label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
                   <input 
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono"
+                    placeholder="••••••••"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest pl-1">Konfirmasi Kata Sandi</label>
+                <div className="relative">
+                  <CheckCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
+                  <input 
+                    type="password"
+                    value={passwordConfirmation}
+                    onChange={(e) => setPasswordConfirmation(e.target.value)}
                     required
                     className="w-full pl-12 pr-4 py-3 rounded-xl border border-outline-variant bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono"
                     placeholder="••••••••"
@@ -112,27 +152,24 @@ export default function Login({ onLogin, onNavigateRegister }: LoginProps) {
               {isLoading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Memasuki Sistem...
+                  Mendaftarkan...
                 </>
               ) : (
                 <>
-                  Masuk Sekarang
+                  Daftar Sekarang
                   <ChevronRight size={20} />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-10 pt-8 border-t border-outline-variant/30 text-center flex flex-col gap-4">
+          <div className="mt-8 pt-6 border-t border-outline-variant/30 text-center">
             <button 
-              onClick={onNavigateRegister}
+              onClick={onNavigateLogin}
               className="text-xs font-bold text-primary hover:underline uppercase tracking-widest"
             >
-              Belum punya akun? Daftar sekarang
+              Sudah punya akun? Masuk di sini
             </button>
-            <p className="text-[10px] text-on-surface-variant/50 uppercase tracking-widest font-medium">
-              Sistem Manajemen Pesanan Internal
-            </p>
           </div>
         </div>
         

@@ -24,7 +24,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
     if (response.status === 401) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_data');
-      window.dispatchEvent(new Event('auth-expired'));
+      window.location.reload(); // Memaksa aplikasi kembali ke state login awal
     }
     throw new Error(data.message || 'Terjadi kesalahan pada server');
   }

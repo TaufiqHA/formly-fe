@@ -8,9 +8,10 @@ interface TopBarProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
   onMenuClick: () => void;
+  user?: any;
 }
 
-export default function TopBar({ currentView, onViewChange, onMenuClick }: TopBarProps) {
+export default function TopBar({ currentView, onViewChange, onMenuClick, user }: TopBarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -108,7 +109,7 @@ export default function TopBar({ currentView, onViewChange, onMenuClick }: TopBa
 
         <img
           onClick={() => onViewChange('profile')}
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAusETVBoa3v1yNS7G3II5xdsLACSYMw3VKgQayx2V1ZyXaxeBtDl6fvhZ7nkjvbgpwW9Sb2m1urp-SF_BNNov-s1QPoIhiN3M_z9VSFoBuZyTm6GYp4ioDe1RTc5f7sQjQn1VjVFO3lOLpKvEeyPFovk-wuN6lGCKi5UI98D3XenoA5hLL7dILS7PCDppItpL9IlXkpIPPXA065CyjFdKCNH2pE5_ylcGqLKY-OFkiel_1pbkyFE3vk6wtdgxmRpO1tytFA0u3onSd"
+          src={user?.avatar_url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user?.name || 'Admin') + "&background=random"}
           alt="User Profile"
           className={cn(
             "w-9 h-9 rounded-full border border-outline-variant object-cover cursor-pointer hover:opacity-80 transition-all shrink-0",
